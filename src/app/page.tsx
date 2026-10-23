@@ -10,12 +10,16 @@ import { CandidateSite, ComparisonResponse, TimeStepTelemetry } from "@/lib/type
 
 import { HudOverlay } from "@/components/HudOverlay";
 import { TimePlayer } from "@/components/TimePlayer";
+import { SiteSelector } from "@/components/SiteSelector";
+import { LunarMap } from "@/components/LunarMap";
+import { Controls } from "@/components/Controls";
 import { KpiCards } from "@/components/KpiCards";
 import { ElevationChart } from "@/components/ElevationChart";
 import { VisibilityTimeline } from "@/components/VisibilityTimeline";
 import { HorizonRadar } from "@/components/HorizonRadar";
 import { TradeOffExplainer } from "@/components/TradeOffExplainer";
 import { ExportReport } from "@/components/ExportReport";
+import type { CameraMode } from "@/components/LunarScene3D";
 
 // Dynamic import of the heavy 3D canvas (client-only, SSR disabled)
 const LunarScene3D = dynamic(
@@ -23,10 +27,10 @@ const LunarScene3D = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full h-full flex items-center justify-center bg-space-950">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-mono text-slate-400">Initialising 3D WebGL Engine…</p>
+          <p className="text-xs font-mono text-slate-400">Initialising 3D WebGL Solar System…</p>
         </div>
       </div>
     ),
@@ -34,7 +38,6 @@ const LunarScene3D = dynamic(
 );
 
 type ViewMode = "3d" | "analytics";
-type CameraMode = "system" | "globe" | "siteA" | "siteB";
 
 export default function Home() {
   // ── Site selection ─────────────────────────────────────────────────────────
@@ -85,7 +88,7 @@ export default function Home() {
       } finally {
         setIsLoading(false);
       }
-    }, 200);
+    }, 180);
   }, [selectedSiteA, selectedSiteB, startDate, endDate, stepHours]);
 
   // Initial run
@@ -101,14 +104,14 @@ export default function Home() {
     const total = comparisonData.siteA.telemetry.length;
     playInterval.current = setInterval(() => {
       setCurrentIndex((prev) => {
-        const next = prev + playSpeed;
+        const next = prev + Math.max(1, Math.floor(playSpeed / 10));
         if (next >= total) {
           setIsPlaying(false);
           return total - 1;
         }
         return next;
       });
-    }, 250);
+    }, 120);
     return () => {
       if (playInterval.current) clearInterval(playInterval.current);
     };
@@ -158,12 +161,49 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── ANALYTICS VIEW (full-screen scrollable panel) ─────────────────── */}
+      {/* ── FULL ANALYTICS VIEW (scrollable split-view) ──────────────────── */}
       {viewMode === "analytics" && (
-        <div className="absolute inset-0 z-0 overflow-y-auto bg-telemetry-grid bg-space-950">
-          <div className="max-w-6xl mx-auto px-4 py-24 space-y-6">
+        <div className="absolute inset-0 z-10 overflow-y-auto bg-telemetry-grid bg-space-950">
+          <div className="max-w-7xl mx-auto px-4 pt-20 pb-16 space-y-6">
+            {/* Controls Bar */}
+            <Controls
+              startDate={startDate}
+              endDate={endDate}
+              stepHours={stepHours}
+              isLoading={isLoading}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onStepHoursChange={setStepHours}
+              onRunAnalysis={runAnalysis}
+              onApplyPreset={(s, e) => { setStartDate(s); setEndDate(e); }}
+            />
+
+            {/* Site Selector & Interactive 2D Lunar Map */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7">
+                <SiteSelector
+                  sites={CANDIDATE_SITES}
+                  selectedSiteA={selectedSiteA}
+                  selectedSiteB={selectedSiteB}
+                  onSelectSiteA={setSelectedSiteA}
+                  onSelectSiteB={setSelectedSiteB}
+                  onSwapSites={handleSwapSites}
+                />
+              </div>
+              <div className="lg:col-span-5">
+                <LunarMap
+                  sites={CANDIDATE_SITES}
+                  selectedSiteA={selectedSiteA}
+                  selectedSiteB={selectedSiteB}
+                  onSelectSiteA={setSelectedSiteA}
+                  onSelectSiteB={setSelectedSiteB}
+                />
+              </div>
+            </div>
+
+            {/* Comparison Charts & Dashboards */}
             {comparisonData ? (
-              <>
+              <div className="space-y-6">
                 <KpiCards siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
                 <ElevationChart siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
                 <VisibilityTimeline siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
@@ -174,9 +214,9 @@ export default function Home() {
                   siteB={comparisonData.siteB}
                 />
                 <ExportReport data={comparisonData} />
-              </>
+              </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-slate-500 font-mono text-sm">
+              <div className="flex items-center justify-center h-48 text-slate-500 font-mono text-sm">
                 {isLoading ? "Computing mission telemetry…" : "Run analysis to view charts."}
               </div>
             )}
@@ -184,7 +224,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── FLOATING COCKPIT HUD OVERLAY ─────────────────────────────────── */}
+      {/* ── FLOATING COCKPIT HUD OVERLAY (Header, Dock, Drawer) ──────────── */}
       <HudOverlay
         viewMode={viewMode}
         cameraMode={cameraMode}
@@ -209,8 +249,8 @@ export default function Home() {
         currentStepB={currentStepB}
       />
 
-      {/* ── BOTTOM TIME PLAYER ────────────────────────────────────────────── */}
-      {comparisonData && (
+      {/* ── BOTTOM INTERACTIVE TIME PLAYER (in 3D mode) ─────────────────── */}
+      {viewMode === "3d" && comparisonData && (
         <div className="absolute bottom-3 left-3 right-3 z-30">
           <TimePlayer
             telemetryA={comparisonData.siteA.telemetry}
