@@ -1,0 +1,94 @@
+name: LunarOps CI & DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main, master, "release/*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test-frontend:
+    name: Frontend Build & Typecheck (Next.js 14)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Next.js Production Build
+        run: npm run build
+
+  test-backend:
+    name: Scientific Python & FastAPI Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Backend Pytest Suite
+        run: |
+          PYTHONPATH=. pytest -v backend/tests/test_api.py
+
+  security-gitleaks:
+    name: DevSecOps — Secret Detection (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  security-semgrep:
+    name: DevSecOps — Static Application Security Testing (Semgrep SAST)
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep Security Rules
+        run: semgrep scan --config auto --error --exclude "node_modules" --exclude ".next"
+        continue-on-error: true
+
+  security-trivy:
+    name: DevSecOps — Vulnerability & Misconfig Scan (Aqua Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Repository Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "table"
+          severity: "CRITICAL,HIGH"
+        continue-on-error: true
