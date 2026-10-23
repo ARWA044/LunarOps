@@ -30,7 +30,8 @@ function Arc({
   cy?: number;
 }) {
   const circumference = 2 * Math.PI * radius;
-  const dash = (Math.max(0, Math.min(100, pct)) / 100) * circumference;
+  const validPct = typeof pct === "number" && !isNaN(pct) ? Math.max(0, Math.min(100, pct)) : 0;
+  const dash = (validPct / 100) * circumference;
   const gap = circumference - dash;
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import React, { useEffect, useRef, useState, useCallback, Suspense, Component, ErrorInfo, ReactNode } from "react";
 import dynamic from "next/dynamic";
 
 import { CANDIDATE_SITES } from "@/lib/lola-terrain";
@@ -21,7 +21,34 @@ import { TradeOffExplainer } from "@/components/TradeOffExplainer";
 import { ExportReport } from "@/components/ExportReport";
 import type { CameraMode } from "@/components/LunarScene3D";
 
-// Dynamic import of the heavy 3D canvas (client-only, SSR disabled)
+// Error Boundary to prevent any WebGL context crash from breaking the UI
+class WebGLErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("3D WebGL scene error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-space-950 text-slate-400 font-mono text-xs p-4 text-center">
+          <div>
+            <p className="text-amber-400 font-bold mb-1">3D WebGL Context Suspended</p>
+            <p>Switch to "📊 Full Analytics" mode to view all 2D charts and mission datasets.</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Dynamic import of the pure native Three.js 3D canvas (client-only, SSR disabled)
 const LunarScene3D = dynamic(
   () => import("@/components/LunarScene3D").then((m) => ({ default: m.LunarScene3D })),
   {
@@ -30,7 +57,7 @@ const LunarScene3D = dynamic(
       <div className="w-full h-full flex items-center justify-center bg-space-950">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-mono text-slate-400">Initialising 3D WebGL Solar System…</p>
+          <p className="text-xs font-mono text-slate-400">Loading 3D Celestial Engine…</p>
         </div>
       </div>
     ),
@@ -84,14 +111,14 @@ export default function Home() {
           engine: "typescript-client",
         });
       } catch (err) {
-        console.error(err);
+        console.error("Analysis calculation error:", err);
       } finally {
         setIsLoading(false);
       }
-    }, 180);
+    }, 150);
   }, [selectedSiteA, selectedSiteB, startDate, endDate, stepHours]);
 
-  // Initial run
+  // Initial run on mount
   useEffect(() => {
     runAnalysis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,7 +127,7 @@ export default function Home() {
   // ── Playback ticker ───────────────────────────────────────────────────────
   useEffect(() => {
     if (playInterval.current) clearInterval(playInterval.current);
-    if (!isPlaying || !comparisonData) return;
+    if (!isPlaying || !comparisonData?.siteA?.telemetry?.length) return;
     const total = comparisonData.siteA.telemetry.length;
     playInterval.current = setInterval(() => {
       setCurrentIndex((prev) => {
@@ -117,21 +144,25 @@ export default function Home() {
     };
   }, [isPlaying, playSpeed, comparisonData]);
 
-  // ── Derived current telemetry step ────────────────────────────────────────
+  // ── Derived current telemetry step (fully defensive) ──────────────────────
   const currentStepA: TimeStepTelemetry | null =
-    comparisonData?.siteA.telemetry[currentIndex] ?? null;
+    comparisonData?.siteA?.telemetry?.[currentIndex] ?? null;
   const currentStepB: TimeStepTelemetry | null =
-    comparisonData?.siteB.telemetry[currentIndex] ?? null;
+    comparisonData?.siteB?.telemetry?.[currentIndex] ?? null;
 
   // Current date for 3D scene (driven by timeline scrubber)
   const currentDate =
-    currentStepA ? new Date(currentStepA.timestamp) : new Date(`${startDate}T00:00:00Z`);
+    currentStepA?.timestamp
+      ? new Date(currentStepA.timestamp)
+      : new Date(`${startDate}T00:00:00Z`);
 
   // Swap sites
   const handleSwapSites = useCallback(() => {
-    setSelectedSiteA(selectedSiteB);
-    setSelectedSiteB(selectedSiteA);
-  }, [selectedSiteA, selectedSiteB]);
+    setSelectedSiteA((prevA) => {
+      setSelectedSiteB(prevA);
+      return selectedSiteB;
+    });
+  }, [selectedSiteB]);
 
   // 3D scene site click
   const handleSiteClick = useCallback((site: CandidateSite, slot: "A" | "B") => {
@@ -144,20 +175,22 @@ export default function Home() {
       {/* ── 3D VIEWPORT (full-screen background) ─────────────────────────── */}
       {viewMode === "3d" && (
         <div className="absolute inset-0 z-0">
-          <Suspense fallback={null}>
-            <LunarScene3D
-              cameraMode={cameraMode}
-              selectedSiteA={selectedSiteA}
-              selectedSiteB={selectedSiteB}
-              currentDate={currentDate}
-              isSunVisibleA={currentStepA?.isSunVisible ?? false}
-              isSunVisibleB={currentStepB?.isSunVisible ?? false}
-              isEarthVisibleA={currentStepA?.isEarthVisible ?? false}
-              isEarthVisibleB={currentStepB?.isEarthVisible ?? false}
-              onSiteClick={handleSiteClick}
-              sites={CANDIDATE_SITES}
-            />
-          </Suspense>
+          <WebGLErrorBoundary>
+            <Suspense fallback={null}>
+              <LunarScene3D
+                cameraMode={cameraMode}
+                selectedSiteA={selectedSiteA}
+                selectedSiteB={selectedSiteB}
+                currentDate={currentDate}
+                isSunVisibleA={currentStepA?.isSunVisible ?? false}
+                isSunVisibleB={currentStepB?.isSunVisible ?? false}
+                isEarthVisibleA={currentStepA?.isEarthVisible ?? false}
+                isEarthVisibleB={currentStepB?.isEarthVisible ?? false}
+                onSiteClick={handleSiteClick}
+                sites={CANDIDATE_SITES}
+              />
+            </Suspense>
+          </WebGLErrorBoundary>
         </div>
       )}
 
@@ -253,7 +286,7 @@ export default function Home() {
       {viewMode === "3d" && comparisonData && (
         <div className="absolute bottom-3 left-3 right-3 z-30">
           <TimePlayer
-            telemetryA={comparisonData.siteA.telemetry}
+            telemetryA={comparisonData?.siteA?.telemetry ?? []}
             currentIndex={currentIndex}
             isPlaying={isPlaying}
             playSpeed={playSpeed}
