@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import CountUp from "react-countup";
 import { SiteAnalysisResult } from "@/lib/types";
 import { BatteryCharging, Eye, Radio, Sparkles, Sun, TrendingDown, TrendingUp } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface KpiCardsProps {
   siteA: SiteAnalysisResult;
@@ -19,10 +21,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
       {/* Primary KPI Grid: Side-by-Side 3 Core Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Metric 1: SUN VISIBLE % */}
-        <div className="bg-space-850 border border-space-700/80 rounded-xl p-4 shadow-telemetry-card relative overflow-hidden">
+        <div
+          onMouseEnter={() => soundEngine?.playDataTick()}
+          className="glass-panel rounded-xl p-4 shadow-telemetry-card relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-500/40"
+        >
           <div className="flex items-center justify-between mb-3">
             <span className="flex items-center gap-1.5 text-xs font-mono text-amber-400 font-semibold tracking-wider">
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
               SUNLIGHT AVAILABILITY
             </span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
@@ -32,13 +37,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             {/* Site A */}
-            <div className="p-2.5 rounded-lg bg-space-900 border border-amber-500/30">
+            <div className="p-2.5 rounded-lg bg-space-950/70 border border-amber-500/30">
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                 <span>SITE A</span>
                 <span className="text-amber-400 font-bold">TARGET</span>
               </div>
               <div className="text-2xl font-mono font-bold text-amber-400 mt-1">
-                {siteA.sunVisiblePct}%
+                <CountUp end={siteA.sunVisiblePct} duration={1.2} decimals={1} suffix="%" preserveValue />
               </div>
               <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                 {siteA.sunVisibleHours}h / {siteA.totalHours}h
@@ -46,13 +51,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
             </div>
 
             {/* Site B */}
-            <div className="p-2.5 rounded-lg bg-space-900 border border-space-700">
+            <div className="p-2.5 rounded-lg bg-space-950/70 border border-white/10">
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                 <span>SITE B</span>
                 <span className="text-sky-400 font-bold">REF</span>
               </div>
               <div className="text-2xl font-mono font-bold text-slate-200 mt-1">
-                {siteB.sunVisiblePct}%
+                <CountUp end={siteB.sunVisiblePct} duration={1.2} decimals={1} suffix="%" preserveValue />
               </div>
               <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                 {siteB.sunVisibleHours}h / {siteB.totalHours}h
@@ -61,7 +66,7 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
           </div>
 
           {/* Delta Indicator */}
-          <div className="mt-3 pt-2 border-t border-space-800 flex items-center justify-between text-xs font-mono">
+          <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-xs font-mono">
             <span className="text-slate-400">Delta (A − B):</span>
             <span
               className={`font-bold flex items-center gap-1 ${
@@ -88,7 +93,10 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
         </div>
 
         {/* Metric 2: EARTH VISIBLE % */}
-        <div className="bg-space-850 border border-space-700/80 rounded-xl p-4 shadow-telemetry-card relative overflow-hidden">
+        <div
+          onMouseEnter={() => soundEngine?.playDataTick()}
+          className="glass-panel rounded-xl p-4 shadow-telemetry-card relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-500/40"
+        >
           <div className="flex items-center justify-between mb-3">
             <span className="flex items-center gap-1.5 text-xs font-mono text-sky-400 font-semibold tracking-wider">
               <Radio className="w-4 h-4 text-sky-400" />
@@ -101,13 +109,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             {/* Site A */}
-            <div className="p-2.5 rounded-lg bg-space-900 border border-sky-500/30">
+            <div className="p-2.5 rounded-lg bg-space-950/70 border border-sky-500/30">
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                 <span>SITE A</span>
                 <span className="text-amber-400 font-bold">TARGET</span>
               </div>
               <div className="text-2xl font-mono font-bold text-sky-400 mt-1">
-                {siteA.earthVisiblePct}%
+                <CountUp end={siteA.earthVisiblePct} duration={1.2} decimals={1} suffix="%" preserveValue />
               </div>
               <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                 {siteA.earthVisibleHours}h / {siteA.totalHours}h
@@ -115,13 +123,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
             </div>
 
             {/* Site B */}
-            <div className="p-2.5 rounded-lg bg-space-900 border border-space-700">
+            <div className="p-2.5 rounded-lg bg-space-950/70 border border-white/10">
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                 <span>SITE B</span>
                 <span className="text-sky-400 font-bold">REF</span>
               </div>
               <div className="text-2xl font-mono font-bold text-slate-200 mt-1">
-                {siteB.earthVisiblePct}%
+                <CountUp end={siteB.earthVisiblePct} duration={1.2} decimals={1} suffix="%" preserveValue />
               </div>
               <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                 {siteB.earthVisibleHours}h / {siteB.totalHours}h
@@ -130,7 +138,7 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
           </div>
 
           {/* Delta Indicator */}
-          <div className="mt-3 pt-2 border-t border-space-800 flex items-center justify-between text-xs font-mono">
+          <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-xs font-mono">
             <span className="text-slate-400">Delta (A − B):</span>
             <span
               className={`font-bold flex items-center gap-1 ${
@@ -157,7 +165,10 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
         </div>
 
         {/* Metric 3: DUAL WINDOW % */}
-        <div className="bg-space-850 border border-space-700/80 rounded-xl p-4 shadow-telemetry-card relative overflow-hidden">
+        <div
+          onMouseEnter={() => soundEngine?.playDataTick()}
+          className="glass-panel rounded-xl p-4 shadow-telemetry-card relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40"
+        >
           <div className="flex items-center justify-between mb-3">
             <span className="flex items-center gap-1.5 text-xs font-mono text-emerald-400 font-semibold tracking-wider">
               <Sparkles className="w-4 h-4 text-emerald-400" />
@@ -170,13 +181,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             {/* Site A */}
-            <div className="p-2.5 rounded-lg bg-space-900 border border-emerald-500/30">
+            <div className="p-2.5 rounded-lg bg-space-950/70 border border-emerald-500/30">
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                 <span>SITE A</span>
                 <span className="text-amber-400 font-bold">TARGET</span>
               </div>
               <div className="text-2xl font-mono font-bold text-emerald-400 mt-1">
-                {siteA.dualVisiblePct}%
+                <CountUp end={siteA.dualVisiblePct} duration={1.2} decimals={1} suffix="%" preserveValue />
               </div>
               <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                 {siteA.dualVisibleHours}h / {siteA.totalHours}h
@@ -184,13 +195,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
             </div>
 
             {/* Site B */}
-            <div className="p-2.5 rounded-lg bg-space-900 border border-space-700">
+            <div className="p-2.5 rounded-lg bg-space-950/70 border border-white/10">
               <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                 <span>SITE B</span>
                 <span className="text-sky-400 font-bold">REF</span>
               </div>
               <div className="text-2xl font-mono font-bold text-slate-200 mt-1">
-                {siteB.dualVisiblePct}%
+                <CountUp end={siteB.dualVisiblePct} duration={1.2} decimals={1} suffix="%" preserveValue />
               </div>
               <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                 {siteB.dualVisibleHours}h / {siteB.totalHours}h
@@ -199,7 +210,7 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
           </div>
 
           {/* Delta Indicator */}
-          <div className="mt-3 pt-2 border-t border-space-800 flex items-center justify-between text-xs font-mono">
+          <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-xs font-mono">
             <span className="text-slate-400">Delta (A − B):</span>
             <span
               className={`font-bold flex items-center gap-1 ${
@@ -229,13 +240,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
       {/* Secondary Metrics Bar: Battery Sizing & Elevation Angles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Site A Max Continuous Darkness */}
-        <div className="bg-space-900/90 border border-space-700/80 rounded-lg p-3">
+        <div className="glass-panel rounded-xl p-3 border border-rose-500/20 hover:border-rose-500/40 transition-colors">
           <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400 mb-1">
             <BatteryCharging className="w-3.5 h-3.5 text-rose-400" />
             SITE A MAX DARKNESS
           </div>
           <div className="text-xl font-mono font-bold text-rose-400">
-            {siteA.maxContinuousDarknessHours}h
+            <CountUp end={siteA.maxContinuousDarknessHours} duration={1} suffix="h" preserveValue />
           </div>
           <p className="text-[10px] text-slate-400 mt-0.5">
             Longest unbroken terrain shadow (battery sizing constraint)
@@ -243,13 +254,13 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
         </div>
 
         {/* Site B Max Continuous Darkness */}
-        <div className="bg-space-900/90 border border-space-700/80 rounded-lg p-3">
+        <div className="glass-panel rounded-xl p-3 border border-rose-500/20 hover:border-rose-500/40 transition-colors">
           <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400 mb-1">
             <BatteryCharging className="w-3.5 h-3.5 text-rose-400" />
             SITE B MAX DARKNESS
           </div>
           <div className="text-xl font-mono font-bold text-rose-400">
-            {siteB.maxContinuousDarknessHours}h
+            <CountUp end={siteB.maxContinuousDarknessHours} duration={1} suffix="h" preserveValue />
           </div>
           <p className="text-[10px] text-slate-400 mt-0.5">
             Longest unbroken terrain shadow (battery sizing constraint)
@@ -257,7 +268,7 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
         </div>
 
         {/* Site A Avg Elevations */}
-        <div className="bg-space-900/90 border border-space-700/80 rounded-lg p-3">
+        <div className="glass-panel rounded-xl p-3 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
           <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400 mb-1">
             <Eye className="w-3.5 h-3.5 text-amber-400" />
             SITE A ANGLES
@@ -272,7 +283,7 @@ export function KpiCards({ siteA, siteB }: KpiCardsProps) {
         </div>
 
         {/* Site B Avg Elevations */}
-        <div className="bg-space-900/90 border border-space-700/80 rounded-lg p-3">
+        <div className="glass-panel rounded-xl p-3 border border-sky-500/20 hover:border-sky-500/40 transition-colors">
           <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400 mb-1">
             <Eye className="w-3.5 h-3.5 text-sky-400" />
             SITE B ANGLES

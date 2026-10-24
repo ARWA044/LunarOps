@@ -3,6 +3,10 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import type { CandidateSite } from "@/lib/types";
 
 export type CameraMode = "system" | "southPole" | "siteA" | "siteB";
@@ -16,6 +20,7 @@ interface SceneProps {
   isSunVisibleB: boolean;
   isEarthVisibleA: boolean;
   isEarthVisibleB: boolean;
+  isAnalysisMode?: boolean;
   onSiteClick?: (site: CandidateSite, slot: "A" | "B") => void;
   sites: CandidateSite[];
 }
@@ -261,6 +266,7 @@ export function LunarScene3D({
   isSunVisibleB,
   isEarthVisibleA,
   isEarthVisibleB,
+  isAnalysisMode = false,
   onSiteClick,
   sites,
 }: SceneProps) {
@@ -276,6 +282,7 @@ export function LunarScene3D({
     isSunVisibleB,
     isEarthVisibleA,
     isEarthVisibleB,
+    isAnalysisMode,
     onSiteClick,
     sites,
   });
@@ -290,6 +297,7 @@ export function LunarScene3D({
       isSunVisibleB,
       isEarthVisibleA,
       isEarthVisibleB,
+      isAnalysisMode,
       onSiteClick,
       sites,
     };
@@ -302,6 +310,7 @@ export function LunarScene3D({
     isSunVisibleB,
     isEarthVisibleA,
     isEarthVisibleB,
+    isAnalysisMode,
     onSiteClick,
     sites,
   ]);
@@ -326,6 +335,21 @@ export function LunarScene3D({
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.25;
     container.appendChild(renderer.domElement);
+
+    // ── Post-Processing Pipeline (UnrealBloomPass) ───────────────────────────
+    const renderScene = new RenderPass(scene, camera);
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      1.15, // bloom strength
+      0.45, // bloom radius
+      0.22  // bloom threshold
+    );
+    const outputPass = new OutputPass();
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+    composer.addPass(outputPass);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -483,18 +507,99 @@ export function LunarScene3D({
     );
     scene.add(orbitLine);
 
-    // ── 5. High-Definition 3D Moon ───────────────────────────────────────────
+    // ── 5. High-Definition 3D Moon & Holographic Blueprint Materials ───────────
     const moonGroup = new THREE.Group();
     const lunarTex = createProceduralLunarTexture();
-    const moonMesh = new THREE.Mesh(
+
+    // Standard realistic rock material
+    const moonNormalMat = new THREE.MeshStandardMaterial({
+      map: lunarTex,
+      roughness: 0.95,
+      metalness: 0.02,
+    });
+
+    // Holographic X-Ray blueprint wireframe material
+    const moonHoloMat = new THREE.MeshBasicMaterial({
+      wireframe: true,
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.72,
+    });
+
+    const moonNormalMesh = new THREE.Mesh(
       new THREE.SphereGeometry(MOON_RADIUS, 64, 64),
-      new THREE.MeshStandardMaterial({
-        map: lunarTex,
-        roughness: 0.95,
-        metalness: 0.02,
+      moonNormalMat
+    );
+    moonGroup.add(moonNormalMesh);
+
+    const moonHoloMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(MOON_RADIUS, 64, 64),
+      moonHoloMat
+    );
+    moonHoloMesh.visible = false;
+    moonGroup.add(moonHoloMesh);
+
+    // Dark occlusion sphere inside the moon (prevents back-facing wireframe clutter in holo mode)
+    const moonOcclusionMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(MOON_RADIUS * 0.992, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0x020817 })
+    );
+    moonOcclusionMesh.visible = false;
+    moonGroup.add(moonOcclusionMesh);
+
+    // Holographic cyan atmospheric rim glow in analysis mode
+    const moonHoloGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(MOON_RADIUS * 1.045, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.28,
+        side: THREE.BackSide,
       })
     );
-    moonGroup.add(moonMesh);
+    moonHoloGlow.visible = false;
+    moonGroup.add(moonHoloGlow);
+
+    // ── High-Tech Holographic Reticles for Site A & Site B ────────────────────
+    const createTargetingReticle = (colorHex: number) => {
+      const g = new THREE.Group();
+
+      // Outer radar ring
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.038, 0.042, 32),
+        new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+      );
+      g.add(ring);
+
+      // Inner dashed reticle ring
+      const innerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.022, 0.025, 24),
+        new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
+      );
+      g.add(innerRing);
+
+      // 4 Crosshair tick bars
+      const tickGeo = new THREE.BufferGeometry();
+      const tickPts = new Float32Array([
+        0, 0.028, 0,  0, 0.052, 0,
+        0, -0.028, 0, 0, -0.052, 0,
+        0.028, 0, 0,  0.052, 0, 0,
+        -0.028, 0, 0, -0.052, 0, 0,
+      ]);
+      tickGeo.setAttribute("position", new THREE.BufferAttribute(tickPts, 3));
+      const tickMat = new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
+      const ticks = new THREE.LineSegments(tickGeo, tickMat);
+      g.add(ticks);
+
+      g.visible = false;
+      return g;
+    };
+
+    const reticleA = createTargetingReticle(0xf59e0b); // Amber for Site A
+    const reticleB = createTargetingReticle(0x00f0ff); // Neon Cyan for Site B
+    moonGroup.add(reticleA);
+    moonGroup.add(reticleB);
+
     scene.add(moonGroup);
 
     // ── 6. Interactive 3D Beacons, Altitude Stalks & LOLA Rings ──────────────
@@ -737,6 +842,33 @@ export function LunarScene3D({
       updateRay(commsRayA, earthCenter, siteAWorld, st.isEarthVisibleA, 0x00f0ff, elapsed);
       updateRay(commsRayB, earthCenter, siteBWorld, st.isEarthVisibleB, 0x00f0ff, elapsed);
 
+      // ── Analysis Mode toggling & Reticle animation ─────────────────────────
+      const isHolo = !!st.isAnalysisMode;
+      moonNormalMesh.visible = !isHolo;
+      moonHoloMesh.visible = isHolo;
+      moonOcclusionMesh.visible = isHolo;
+      moonHoloGlow.visible = isHolo;
+      reticleA.visible = isHolo;
+      reticleB.visible = isHolo;
+
+      if (isHolo) {
+        const reticleAPos = siteALocal.clone().normalize().multiplyScalar(MOON_RADIUS * 1.022);
+        reticleA.position.copy(reticleAPos);
+        reticleA.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), reticleAPos.clone().normalize());
+        reticleA.rotateZ(elapsed * 0.5);
+
+        const reticleBPos = siteBLocal.clone().normalize().multiplyScalar(MOON_RADIUS * 1.022);
+        reticleB.position.copy(reticleBPos);
+        reticleB.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), reticleBPos.clone().normalize());
+        reticleB.rotateZ(-elapsed * 0.5);
+
+        bloomPass.strength = 1.4;
+        bloomPass.threshold = 0.16;
+      } else {
+        bloomPass.strength = 0.85;
+        bloomPass.threshold = 0.28;
+      }
+
       // Camera Easing Lerp
       if (targetCamPos && targetCamLook) {
         camera.position.lerp(targetCamPos, 0.045);
@@ -744,7 +876,7 @@ export function LunarScene3D({
       }
 
       controls.update();
-      renderer.render(scene, camera);
+      composer.render();
     };
 
     animate();
@@ -757,6 +889,8 @@ export function LunarScene3D({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      composer.setSize(w, h);
+      bloomPass.resolution.set(w, h);
     };
     window.addEventListener("resize", handleResize);
 
@@ -765,6 +899,7 @@ export function LunarScene3D({
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", handleResize);
       renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
+      composer.dispose();
       controls.dispose();
       renderer.dispose();
       if (container.contains(renderer.domElement)) {

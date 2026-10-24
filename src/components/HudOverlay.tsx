@@ -13,6 +13,9 @@ import {
   Menu,
   ArrowLeftRight,
   Sliders,
+  Layers,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { CandidateSite, ComparisonResponse, TimeStepTelemetry } from "@/lib/types";
 import { CANDIDATE_SITES } from "@/lib/lola-terrain";
@@ -23,6 +26,7 @@ import { HorizonRadar } from "./HorizonRadar";
 import { TradeOffExplainer } from "./TradeOffExplainer";
 import { ExportReport } from "./ExportReport";
 import { SoundWidget } from "./SoundWidget";
+import { StoryGuide } from "./StoryGuide";
 import { soundEngine } from "@/lib/sound-engine";
 import type { CameraMode } from "./LunarScene3D";
 
@@ -47,6 +51,8 @@ interface HudOverlayProps {
   onStepHoursChange: (h: number) => void;
   onRunAnalysis: () => void;
   onApplyPreset: (s: string, e: string) => void;
+  isAnalysisMode: boolean;
+  onToggleAnalysisMode: () => void;
   comparisonData: ComparisonResponse | null;
   currentStepA: TimeStepTelemetry | null;
   currentStepB: TimeStepTelemetry | null;
@@ -71,6 +77,8 @@ export function HudOverlay({
   onStepHoursChange,
   onRunAnalysis,
   onApplyPreset,
+  isAnalysisMode,
+  onToggleAnalysisMode,
   comparisonData,
   currentStepA,
   currentStepB,
@@ -78,6 +86,7 @@ export function HudOverlay({
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(false);
   const [showFullDisclaimer, setShowFullDisclaimer] = useState(false);
+  const [leftTab, setLeftTab] = useState<"story" | "manual">("story");
 
   const cameraModes: { key: CameraMode; label: string; icon: React.ReactNode }[] = [
     { key: "system", label: "System Orbit", icon: <Orbit className="w-3.5 h-3.5" /> },
@@ -190,6 +199,25 @@ export function HudOverlay({
           </div>
         )}
 
+        {/* Holographic 3D Analysis Mode Toggle */}
+        {viewMode === "3d" && (
+          <button
+            onClick={() => {
+              soundEngine?.playClick();
+              onToggleAnalysisMode();
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all shadow-glass border ${
+              isAnalysisMode
+                ? "bg-cyan-500 text-space-950 border-cyan-300 shadow-[0_0_24px_rgba(0,240,255,0.7)] animate-pulse"
+                : "glass-panel text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
+            }`}
+            title="Toggle Holographic Blueprint / X-Ray Wireframe Mode"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>{isAnalysisMode ? "🔬 Holographic: ON" : "🔬 Analysis Mode"}</span>
+          </button>
+        )}
+
         <div className="flex items-center gap-2">
           {/* Sound Synthesizer Engine Widget */}
           <SoundWidget />
@@ -270,148 +298,203 @@ export function HudOverlay({
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
+            {/* Dock Tab Selector: Story Mode vs Manual Telemetry */}
+            <div className="flex items-center glass-panel rounded-xl p-1 gap-1 shrink-0 shadow-glass">
+              <button
+                onClick={() => {
+                  soundEngine?.playClick();
+                  setLeftTab("story");
+                }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
+                  leftTab === "story"
+                    ? "bg-gradient-to-r from-amber-500/25 to-sky-500/25 text-white font-bold border border-white/20 shadow-solar-glow"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Story Mode</span>
+              </button>
+              <button
+                onClick={() => {
+                  soundEngine?.playClick();
+                  setLeftTab("manual");
+                }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
+                  leftTab === "manual"
+                    ? "bg-white/15 text-white font-bold border border-white/20"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5 text-sky-400" />
+                <span>Manual HUD</span>
+              </button>
+            </div>
+
             <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
-              {/* Site A Card */}
-              <div className="glass-panel rounded-xl p-3 border-l-4 border-l-amber-500">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider">
-                    Site A — Target
-                  </span>
-                  <button
-                    onClick={handleSwap}
-                    className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-colors"
-                    title="Swap Site A and Site B"
-                  >
-                    <ArrowLeftRight className="w-3 h-3" />
-                  </button>
-                </div>
-                <div className="text-sm font-bold text-white truncate">{selectedSiteA.name}</div>
-                <div className="text-[10px] font-mono text-amber-300 mt-0.5">{selectedSiteA.coordinatesDisplay}</div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5">{selectedSiteA.targetMission}</div>
+              {leftTab === "story" ? (
+                <StoryGuide
+                  selectedSiteA={selectedSiteA}
+                  selectedSiteB={selectedSiteB}
+                  onSelectSiteA={handleSiteSelectA}
+                  onSelectSiteB={handleSiteSelectB}
+                  onCameraModeChange={handleCameraChange}
+                  startDate={startDate}
+                  endDate={endDate}
+                  stepHours={stepHours}
+                  onStartDateChange={onStartDateChange}
+                  onEndDateChange={onEndDateChange}
+                  onApplyPreset={handlePreset}
+                  onRunAnalysis={handleTriggerAnalysis}
+                  isAnalysisMode={isAnalysisMode}
+                  onToggleAnalysisMode={onToggleAnalysisMode}
+                  isLoading={isLoading}
+                  onOpenAnalyticsDrawer={() => setRightOpen(true)}
+                />
+              ) : (
+                <>
+                  {/* Site A Card */}
+                  <div className="glass-panel rounded-xl p-3 border-l-4 border-l-amber-500">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider">
+                        Site A — Target
+                      </span>
+                      <button
+                        onClick={handleSwap}
+                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-colors"
+                        title="Swap Site A and Site B"
+                      >
+                        <ArrowLeftRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <div className="text-sm font-bold text-white truncate">{selectedSiteA.name}</div>
+                    <div className="text-[10px] font-mono text-amber-300 mt-0.5">{selectedSiteA.coordinatesDisplay}</div>
+                    <div className="text-[10px] text-slate-400 truncate mt-0.5">{selectedSiteA.targetMission}</div>
 
-                {/* Candidate Sites Dropdown / Picker */}
-                <select
-                  value={selectedSiteA.id}
-                  onChange={(e) => {
-                    const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
-                    if (found) handleSiteSelectA(found);
-                  }}
-                  className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-500"
-                >
-                  {CANDIDATE_SITES.map((site) => (
-                    <option key={site.id} value={site.id}>
-                      {site.badge}: {site.name} ({site.category})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Site B Card */}
-              <div className="glass-panel rounded-xl p-3 border-l-4 border-l-sky-500">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono text-sky-400 font-bold uppercase tracking-wider">
-                    Site B — Benchmark
-                  </span>
-                </div>
-                <div className="text-sm font-bold text-white truncate">{selectedSiteB.name}</div>
-                <div className="text-[10px] font-mono text-sky-300 mt-0.5">{selectedSiteB.coordinatesDisplay}</div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5">{selectedSiteB.targetMission}</div>
-
-                <select
-                  value={selectedSiteB.id}
-                  onChange={(e) => {
-                    const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
-                    if (found) handleSiteSelectB(found);
-                  }}
-                  className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"
-                >
-                  {CANDIDATE_SITES.map((site) => (
-                    <option key={site.id} value={site.id}>
-                      {site.badge}: {site.name} ({site.category})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Side-by-Side KPI Rings */}
-              {comparisonData && (
-                <div className="grid grid-cols-2 gap-2">
-                  <KpiRings
-                    sunPct={comparisonData.siteA.sunVisiblePct}
-                    earthPct={comparisonData.siteA.earthVisiblePct}
-                    dualPct={comparisonData.siteA.dualVisiblePct}
-                    siteLabel={`A: ${comparisonData.siteA.site.name.split(" ")[0]}`}
-                    siteColor="amber"
-                    currentStep={currentStepA}
-                  />
-                  <KpiRings
-                    sunPct={comparisonData.siteB.sunVisiblePct}
-                    earthPct={comparisonData.siteB.earthVisiblePct}
-                    dualPct={comparisonData.siteB.dualVisiblePct}
-                    siteLabel={`B: ${comparisonData.siteB.site.name.split(" ")[0]}`}
-                    siteColor="sky"
-                    currentStep={currentStepB}
-                  />
-                </div>
-              )}
-
-              {/* UTC Dates & Presets Control Panel */}
-              <div className="glass-panel rounded-xl p-3 space-y-2.5">
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                  <span>Mission Ephemeris Time</span>
-                  <Sliders className="w-3 h-3 text-amber-400" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[9px] font-mono text-slate-500 block mb-0.5">START UTC</label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => onStartDateChange(e.target.value)}
-                      className="w-full bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-mono text-slate-500 block mb-0.5">END UTC</label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => onEndDateChange(e.target.value)}
-                      className="w-full bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Presets */}
-                <div className="grid grid-cols-3 gap-1">
-                  {[
-                    { label: "7-Day", start: "2027-01-01", end: "2027-01-07" },
-                    { label: "14-Day", start: "2027-01-01", end: "2027-01-15" },
-                    { label: "29.5-Day", start: "2027-01-01", end: "2027-01-30" },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      onClick={() => handlePreset(preset.start, preset.end)}
-                      className="py-1 rounded-lg text-[9px] font-mono bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors text-center"
+                    {/* Candidate Sites Dropdown / Picker */}
+                    <select
+                      value={selectedSiteA.id}
+                      onChange={(e) => {
+                        const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
+                        if (found) handleSiteSelectA(found);
+                      }}
+                      className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-500"
                     >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
+                      {CANDIDATE_SITES.map((site) => (
+                        <option key={site.id} value={site.id}>
+                          {site.badge}: {site.name} ({site.category})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Run Analysis Trigger */}
-                <button
-                  onClick={handleTriggerAnalysis}
-                  disabled={isLoading}
-                  className={`w-full py-2 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-solar-glow ${
-                    isLoading
-                      ? "bg-amber-600/50 text-amber-200 cursor-not-allowed"
-                      : "bg-amber-500 hover:bg-amber-400 text-space-950 active:scale-95"
-                  }`}
-                >
-                  {isLoading ? "CALCULATING LOLA MASKS…" : "▶ RUN ANALYSIS"}
-                </button>
-              </div>
+                  {/* Site B Card */}
+                  <div className="glass-panel rounded-xl p-3 border-l-4 border-l-sky-500">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono text-sky-400 font-bold uppercase tracking-wider">
+                        Site B — Benchmark
+                      </span>
+                    </div>
+                    <div className="text-sm font-bold text-white truncate">{selectedSiteB.name}</div>
+                    <div className="text-[10px] font-mono text-sky-300 mt-0.5">{selectedSiteB.coordinatesDisplay}</div>
+                    <div className="text-[10px] text-slate-400 truncate mt-0.5">{selectedSiteB.targetMission}</div>
+
+                    <select
+                      value={selectedSiteB.id}
+                      onChange={(e) => {
+                        const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
+                        if (found) handleSiteSelectB(found);
+                      }}
+                      className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"
+                    >
+                      {CANDIDATE_SITES.map((site) => (
+                        <option key={site.id} value={site.id}>
+                          {site.badge}: {site.name} ({site.category})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Side-by-Side KPI Rings */}
+                  {comparisonData && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <KpiRings
+                        sunPct={comparisonData.siteA.sunVisiblePct}
+                        earthPct={comparisonData.siteA.earthVisiblePct}
+                        dualPct={comparisonData.siteA.dualVisiblePct}
+                        siteLabel={`A: ${comparisonData.siteA.site.name.split(" ")[0]}`}
+                        siteColor="amber"
+                        currentStep={currentStepA}
+                      />
+                      <KpiRings
+                        sunPct={comparisonData.siteB.sunVisiblePct}
+                        earthPct={comparisonData.siteB.earthVisiblePct}
+                        dualPct={comparisonData.siteB.dualVisiblePct}
+                        siteLabel={`B: ${comparisonData.siteB.site.name.split(" ")[0]}`}
+                        siteColor="sky"
+                        currentStep={currentStepB}
+                      />
+                    </div>
+                  )}
+
+                  {/* UTC Dates & Presets Control Panel */}
+                  <div className="glass-panel rounded-xl p-3 space-y-2.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                      <span>Mission Ephemeris Time</span>
+                      <Sliders className="w-3 h-3 text-amber-400" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] font-mono text-slate-500 block mb-0.5">START UTC</label>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => onStartDateChange(e.target.value)}
+                          className="w-full bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-mono text-slate-500 block mb-0.5">END UTC</label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => onEndDateChange(e.target.value)}
+                          className="w-full bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="grid grid-cols-3 gap-1">
+                      {[
+                        { label: "7-Day", start: "2027-01-01", end: "2027-01-07" },
+                        { label: "14-Day", start: "2027-01-01", end: "2027-01-15" },
+                        { label: "29.5-Day", start: "2027-01-01", end: "2027-01-30" },
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          onClick={() => handlePreset(preset.start, preset.end)}
+                          className="py-1 rounded-lg text-[9px] font-mono bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors text-center"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Run Analysis Trigger */}
+                    <button
+                      onClick={handleTriggerAnalysis}
+                      disabled={isLoading}
+                      className={`w-full py-2 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-solar-glow ${
+                        isLoading
+                          ? "bg-amber-600/50 text-amber-200 cursor-not-allowed"
+                          : "bg-amber-500 hover:bg-amber-400 text-space-950 active:scale-95"
+                      }`}
+                    >
+                      {isLoading ? "CALCULATING LOLA MASKS…" : "▶ RUN ANALYSIS"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

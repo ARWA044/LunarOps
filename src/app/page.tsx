@@ -84,6 +84,7 @@ export default function Home() {
   // ── View & camera mode ─────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("3d");
   const [cameraMode, setCameraMode] = useState<CameraMode>("system");
+  const [isAnalysisMode, setIsAnalysisMode] = useState(false);
 
   // ── Time player ───────────────────────────────────────────────────────────
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -188,6 +189,7 @@ export default function Home() {
                 isSunVisibleB={currentStepB?.isSunVisible ?? false}
                 isEarthVisibleA={currentStepA?.isEarthVisible ?? false}
                 isEarthVisibleB={currentStepB?.isEarthVisible ?? false}
+                isAnalysisMode={isAnalysisMode}
                 onSiteClick={handleSiteClick}
                 sites={CANDIDATE_SITES}
               />
@@ -279,6 +281,8 @@ export default function Home() {
         onStepHoursChange={setStepHours}
         onRunAnalysis={runAnalysis}
         onApplyPreset={(s, e) => { setStartDate(s); setEndDate(e); }}
+        isAnalysisMode={isAnalysisMode}
+        onToggleAnalysisMode={() => setIsAnalysisMode((p) => !p)}
         comparisonData={comparisonData}
         currentStepA={currentStepA}
         currentStepB={currentStepB}
