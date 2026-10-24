@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ComparisonResponse } from "@/lib/types";
 import { Check, Download, FileSpreadsheet, FileText, Share2 } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface ExportReportProps {
   data: ComparisonResponse;
@@ -12,6 +13,7 @@ export function ExportReport({ data }: ExportReportProps) {
   const [copied, setCopied] = useState(false);
 
   const downloadJson = () => {
+    soundEngine?.playClick();
     const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", jsonStr);
@@ -25,6 +27,7 @@ export function ExportReport({ data }: ExportReportProps) {
   };
 
   const downloadCsv = () => {
+    soundEngine?.playClick();
     const headers = [
       "Timestamp_UTC",
       "Epoch_Hours",
@@ -100,6 +103,7 @@ Site B (${data.siteB.site.name}):
 - Dual Combined Window: ${data.siteB.dualVisiblePct}% (${data.siteB.dualVisibleHours}h)
 - Max Continuous Shadow: ${data.siteB.maxContinuousDarknessHours}h
 `;
+    soundEngine?.playClick();
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);

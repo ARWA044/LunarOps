@@ -6,9 +6,9 @@
   :root {
     --background: #04070d;
     --foreground: #f8fafc;
-    --glass-bg: rgba(7, 11, 20, 0.65);
+    --glass-bg: rgba(10, 15, 30, 0.65);
     --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
   }
 
   html, body {
@@ -18,47 +18,48 @@
   body {
     background-color: #04070d;
     color: var(--foreground);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Glass morphism utility classes */
+/* Spatial Glassmorphism & Sci-Fi Telemetry HUD */
 .glass-panel {
-  background: rgba(7, 11, 20, 0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(10, 15, 30, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .glass-panel-light {
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
 }
 
 .glass-card {
-  background: rgba(11, 17, 32, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  background: rgba(11, 17, 32, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
 }
 
-/* Sci-Fi HUD active glow */
+/* Sci-Fi HUD Glow Accents */
 .glow-solar {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 40px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.15);
 }
 .glow-earth {
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3), 0 0 40px rgba(56, 189, 248, 0.1);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.15);
 }
 .glow-optimal {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.15);
 }
 .glow-alert {
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), 0 0 40px rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.15);
 }
 
 /* Animated telemetry scan line */
@@ -73,7 +74,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
   animation: scan 3s linear infinite;
 }
 @keyframes scan {
@@ -92,16 +93,16 @@
 /* Custom thin scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
 
 /* Live pulse beacon */
 @keyframes beacon-pulse {
   0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
 .beacon-pulse {
-  animation: beacon-pulse 1.5s ease-out infinite;
+  animation: beacon-pulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 /* Smooth HUD dock slide transitions */
@@ -115,12 +116,12 @@
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
 }
 
-/* Active/selected button style for HUD */
+/* Active button style */
 .hud-btn-active {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.45);
   color: #fbbf24;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
 }
 
 /* Time player progress bar */
@@ -133,8 +134,21 @@
   background: linear-gradient(90deg, #f59e0b, #fbbf24);
 }
 .timeline-fill-earth {
-  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+  background: linear-gradient(90deg, #00f0ff, #7dd3fc);
 }
 .timeline-fill-dual {
   background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .beacon-pulse, .scan-line::after {
+    animation: none !important;
+  }
 }

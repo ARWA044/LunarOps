@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Calendar, Clock, Play, RotateCcw, Sliders } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface ControlsProps {
   startDate: string;
@@ -107,7 +108,10 @@ export function Controls({
               {presets.map((preset) => (
                 <button
                   key={preset.name}
-                  onClick={() => onApplyPreset(preset.start, preset.end)}
+                  onClick={() => {
+                    soundEngine?.playClick();
+                    onApplyPreset(preset.start, preset.end);
+                  }}
                   className="px-2.5 py-1.5 rounded-lg bg-space-900 hover:bg-space-700/80 border border-space-700 text-xs font-mono text-slate-300 hover:text-white transition-all hover:border-slate-500"
                   title={preset.desc}
                 >
@@ -121,7 +125,10 @@ export function Controls({
         {/* Action Button */}
         <div className="flex items-end">
           <button
-            onClick={onRunAnalysis}
+            onClick={() => {
+              soundEngine?.playBeaconSelect();
+              onRunAnalysis();
+            }}
             disabled={isLoading}
             className={`w-full lg:w-auto px-6 py-2.5 rounded-xl font-mono text-sm font-bold flex items-center justify-center gap-2 shadow-solar-glow transition-all ${
               isLoading

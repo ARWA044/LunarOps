@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { SiteAnalysisResult, TimeStepTelemetry } from "@/lib/types";
 import { Eye, Info, Layers, Radio, Sun } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface ElevationChartProps {
   siteA: SiteAnalysisResult;
@@ -107,7 +108,10 @@ export function ElevationChart({ siteA, siteB }: ElevationChartProps) {
         {/* Site View Toggle Tabs */}
         <div className="flex items-center bg-space-900 rounded-lg p-0.5 border border-space-700 text-xs font-mono">
           <button
-            onClick={() => setActiveSiteTab("siteA")}
+            onClick={() => {
+              soundEngine?.playClick();
+              setActiveSiteTab("siteA");
+            }}
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
               activeSiteTab === "siteA"
                 ? "bg-amber-500 text-space-950 font-bold"
@@ -118,7 +122,10 @@ export function ElevationChart({ siteA, siteB }: ElevationChartProps) {
             SITE A: {siteA.site.name}
           </button>
           <button
-            onClick={() => setActiveSiteTab("siteB")}
+            onClick={() => {
+              soundEngine?.playClick();
+              setActiveSiteTab("siteB");
+            }}
             className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-all ${
               activeSiteTab === "siteB"
                 ? "bg-sky-500 text-space-950 font-bold"

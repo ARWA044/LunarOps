@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { TimeStepTelemetry } from "@/lib/types";
 import { Pause, Play, Rewind, SkipForward } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface TimePlayerProps {
   telemetryA?: TimeStepTelemetry[];
@@ -37,12 +38,50 @@ export function TimePlayer({
   const total = telemetryA?.length ?? 0;
   const pct = total > 1 ? (Math.min(currentIndex, total - 1) / Math.max(1, total - 1)) * 100 : 0;
 
+  // Track state transitions to trigger procedural alert chimes
+  const lastSunVisA = useRef<boolean | null>(null);
+  const lastEarthVisA = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (!currentStepA) return;
+    if (lastSunVisA.current !== null) {
+      if (lastSunVisA.current && !currentStepA.isSunVisible) {
+        soundEngine?.playLoSAlert(); // Site A entered lunar night/shadow
+      } else if (lastEarthVisA.current && !currentStepA.isEarthVisible) {
+        soundEngine?.playLoSAlert(); // Site A lost Earth DTE line-of-sight
+      }
+    }
+    lastSunVisA.current = currentStepA.isSunVisible;
+    lastEarthVisA.current = currentStepA.isEarthVisible;
+  }, [currentStepA]);
+
   const handleSlider = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      soundEngine?.playScrubTick();
       onIndexChange(Math.round(Number(e.target.value)));
     },
     [onIndexChange]
   );
+
+  const handleStepBack = () => {
+    soundEngine?.playScrubTick();
+    onIndexChange(Math.max(0, currentIndex - 10));
+  };
+
+  const handleStepForward = () => {
+    soundEngine?.playScrubTick();
+    onIndexChange(Math.min(Math.max(0, total - 1), currentIndex + 10));
+  };
+
+  const handleTogglePlay = () => {
+    soundEngine?.playClick();
+    onPlayToggle();
+  };
+
+  const handleSetSpeed = (s: number) => {
+    soundEngine?.playClick();
+    onSpeedChange(s);
+  };
 
   const utcLabel = currentStepA?.timestamp
     ? currentStepA.timestamp.replace("T", "  ").replace(".000Z", " UTC").replace("Z", " UTC")
@@ -53,12 +92,12 @@ export function TimePlayer({
       {/* Top row: status indicators */}
       <div className="flex items-center justify-between gap-4 text-[10px] font-mono">
         <span className="text-slate-400 tracking-widest uppercase">Mission Epoch</span>
-        <span className="text-white font-bold text-xs">{utcLabel}</span>
+        <span className="text-white font-bold text-xs tabular-nums">{utcLabel}</span>
         <div className="flex items-center gap-2">
           {currentStepA && (
             <span
               className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepA.isSunVisible ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-slate-800 text-slate-500"
+                currentStepA.isSunVisible ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
               }`}
             >
               A-SUN {currentStepA.isSunVisible ? "ON" : "OFF"}
@@ -67,7 +106,7 @@ export function TimePlayer({
           {currentStepA && (
             <span
               className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepA.isEarthVisible ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" : "bg-slate-800 text-slate-500"
+                currentStepA.isEarthVisible ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
               }`}
             >
               A-DTE {currentStepA.isEarthVisible ? "CLR" : "BLK"}
@@ -76,7 +115,7 @@ export function TimePlayer({
           {currentStepB && (
             <span
               className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepB.isSunVisible ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-slate-800 text-slate-500"
+                currentStepB.isSunVisible ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
               }`}
             >
               B-SUN {currentStepB.isSunVisible ? "ON" : "OFF"}
@@ -85,7 +124,7 @@ export function TimePlayer({
           {currentStepB && (
             <span
               className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepB.isEarthVisible ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" : "bg-slate-800 text-slate-500"
+                currentStepB.isEarthVisible ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
               }`}
             >
               B-DTE {currentStepB.isEarthVisible ? "CLR" : "BLK"}
@@ -135,14 +174,14 @@ export function TimePlayer({
         {/* Playback controls */}
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => onIndexChange(Math.max(0, currentIndex - 10))}
+            onClick={handleStepBack}
             className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
             title="Step Back 10 Hours"
           >
             <Rewind className="w-3 h-3" />
           </button>
           <button
-            onClick={onPlayToggle}
+            onClick={handleTogglePlay}
             className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
               isPlaying
                 ? "bg-amber-500 text-space-950 font-bold shadow-solar-glow"
@@ -153,7 +192,7 @@ export function TimePlayer({
             {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
           </button>
           <button
-            onClick={() => onIndexChange(Math.min(Math.max(0, total - 1), currentIndex + 10))}
+            onClick={handleStepForward}
             className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
             title="Step Forward 10 Hours"
           >
@@ -171,7 +210,7 @@ export function TimePlayer({
           {SPEEDS.map((s) => (
             <button
               key={s.value}
-              onClick={() => onSpeedChange(s.value)}
+              onClick={() => handleSetSpeed(s.value)}
               className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-bold transition-all ${
                 playSpeed === s.value
                   ? "bg-amber-500 text-space-950"
@@ -185,14 +224,14 @@ export function TimePlayer({
 
         {/* Live elevation readouts */}
         {currentStepA && (
-          <div className="hidden lg:flex items-center gap-3 text-[10px] font-mono">
+          <div className="hidden lg:flex items-center gap-3 text-[10px] font-mono tabular-nums">
             <span className="text-slate-400">Site A:</span>
             <span className="text-amber-400 font-bold">☀ {currentStepA.sunElevation}°</span>
             <span className="text-sky-400 font-bold">⊕ {currentStepA.earthElevation}°</span>
           </div>
         )}
         {currentStepB && (
-          <div className="hidden xl:flex items-center gap-3 text-[10px] font-mono">
+          <div className="hidden xl:flex items-center gap-3 text-[10px] font-mono tabular-nums">
             <span className="text-slate-400">Site B:</span>
             <span className="text-amber-400 font-bold">☀ {currentStepB.sunElevation}°</span>
             <span className="text-sky-400 font-bold">⊕ {currentStepB.earthElevation}°</span>

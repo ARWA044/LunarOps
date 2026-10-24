@@ -22,6 +22,8 @@ import { VisibilityTimeline } from "./VisibilityTimeline";
 import { HorizonRadar } from "./HorizonRadar";
 import { TradeOffExplainer } from "./TradeOffExplainer";
 import { ExportReport } from "./ExportReport";
+import { SoundWidget } from "./SoundWidget";
+import { soundEngine } from "@/lib/sound-engine";
 import type { CameraMode } from "./LunarScene3D";
 
 type ViewMode = "3d" | "analytics";
@@ -84,6 +86,41 @@ export function HudOverlay({
     { key: "siteB", label: "Site B Lock", icon: <Crosshair className="w-3.5 h-3.5" /> },
   ];
 
+  const handleCameraChange = (key: CameraMode) => {
+    soundEngine?.playClick();
+    onCameraModeChange(key);
+  };
+
+  const handleViewChange = (mode: ViewMode) => {
+    soundEngine?.playClick();
+    onViewModeChange(mode);
+  };
+
+  const handleSwap = () => {
+    soundEngine?.playClick();
+    onSwapSites();
+  };
+
+  const handleSiteSelectA = (site: CandidateSite) => {
+    soundEngine?.playBeaconSelect();
+    onSelectSiteA(site);
+  };
+
+  const handleSiteSelectB = (site: CandidateSite) => {
+    soundEngine?.playBeaconSelect();
+    onSelectSiteB(site);
+  };
+
+  const handlePreset = (s: string, e: string) => {
+    soundEngine?.playClick();
+    onApplyPreset(s, e);
+  };
+
+  const handleTriggerAnalysis = () => {
+    soundEngine?.playBeaconSelect();
+    onRunAnalysis();
+  };
+
   return (
     <>
       {/* ── TOP FLOATING HEADER BAR ───────────────────────────────────────── */}
@@ -109,7 +146,7 @@ export function HudOverlay({
         {/* View Switcher: 🌌 3D Orbital HUD vs 📊 Full Analytics */}
         <div className="flex items-center glass-panel rounded-xl p-1 gap-1 shadow-glass">
           <button
-            onClick={() => onViewModeChange("3d")}
+            onClick={() => handleViewChange("3d")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
               viewMode === "3d"
                 ? "bg-amber-500 text-space-950 font-bold shadow-solar-glow"
@@ -120,7 +157,7 @@ export function HudOverlay({
             <span>🌌 3D Orbital HUD</span>
           </button>
           <button
-            onClick={() => onViewModeChange("analytics")}
+            onClick={() => handleViewChange("analytics")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
               viewMode === "analytics"
                 ? "bg-sky-500 text-space-950 font-bold shadow-earth-glow"
@@ -138,7 +175,7 @@ export function HudOverlay({
             {cameraModes.map((cm) => (
               <button
                 key={cm.key}
-                onClick={() => onCameraModeChange(cm.key)}
+                onClick={() => handleCameraChange(cm.key)}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
                   cameraMode === cm.key
                     ? "bg-white/15 text-white font-bold border border-white/20"
@@ -153,28 +190,39 @@ export function HudOverlay({
           </div>
         )}
 
-        {/* Scientific Disclaimer Toggle Badge */}
-        <button
-          onClick={() => setShowFullDisclaimer((p) => !p)}
-          className="flex items-center gap-1.5 glass-panel rounded-xl px-2.5 py-1.5 text-[10px] font-mono text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-colors shadow-glass"
-          title="Click to view full NASA scientific disclaimer"
-        >
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="hidden sm:inline">Scientific Disclaimer</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Sound Synthesizer Engine Widget */}
+          <SoundWidget />
 
-        {/* Right Analytics Drawer Toggle Button (in 3D mode) */}
-        {viewMode === "3d" && comparisonData && (
+          {/* Scientific Disclaimer Toggle Badge */}
           <button
-            onClick={() => setRightOpen((p) => !p)}
-            className={`glass-panel rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-mono transition-all shadow-glass ${
-              rightOpen ? "bg-sky-500/20 text-sky-300 border-sky-500/50" : "text-slate-300 hover:text-white"
-            }`}
+            onClick={() => {
+              soundEngine?.playClick();
+              setShowFullDisclaimer((p) => !p);
+            }}
+            className="flex items-center gap-1.5 glass-panel rounded-xl px-2.5 py-1.5 text-[10px] font-mono text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-colors shadow-glass"
+            title="Click to view full NASA scientific disclaimer"
           >
-            <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Analytics Drawer</span>
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="hidden sm:inline">Scientific Disclaimer</span>
           </button>
-        )}
+
+          {/* Right Analytics Drawer Toggle Button (in 3D mode) */}
+          {viewMode === "3d" && comparisonData && (
+            <button
+              onClick={() => {
+                soundEngine?.playClick();
+                setRightOpen((p) => !p);
+              }}
+              className={`glass-panel rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-mono transition-all shadow-glass ${
+                rightOpen ? "bg-sky-500/20 text-sky-300 border-sky-500/50" : "text-slate-300 hover:text-white"
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden sm:inline">Analytics Drawer</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── EXPANDABLE SCIENTIFIC DISCLAIMER MODAL / BANNER ───────────────── */}
@@ -212,7 +260,10 @@ export function HudOverlay({
           >
             {/* Collapse toggle */}
             <button
-              onClick={() => setLeftOpen(false)}
+              onClick={() => {
+                soundEngine?.playClick();
+                setLeftOpen(false);
+              }}
               className="absolute -right-8 top-2 glass-panel w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
               title="Collapse Dock"
             >
@@ -227,7 +278,7 @@ export function HudOverlay({
                     Site A — Target
                   </span>
                   <button
-                    onClick={onSwapSites}
+                    onClick={handleSwap}
                     className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-colors"
                     title="Swap Site A and Site B"
                   >
@@ -243,7 +294,7 @@ export function HudOverlay({
                   value={selectedSiteA.id}
                   onChange={(e) => {
                     const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
-                    if (found) onSelectSiteA(found);
+                    if (found) handleSiteSelectA(found);
                   }}
                   className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-500"
                 >
@@ -270,7 +321,7 @@ export function HudOverlay({
                   value={selectedSiteB.id}
                   onChange={(e) => {
                     const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
-                    if (found) onSelectSiteB(found);
+                    if (found) handleSiteSelectB(found);
                   }}
                   className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"
                 >
@@ -340,7 +391,7 @@ export function HudOverlay({
                   ].map((preset) => (
                     <button
                       key={preset.label}
-                      onClick={() => onApplyPreset(preset.start, preset.end)}
+                      onClick={() => handlePreset(preset.start, preset.end)}
                       className="py-1 rounded-lg text-[9px] font-mono bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors text-center"
                     >
                       {preset.label}
@@ -350,7 +401,7 @@ export function HudOverlay({
 
                 {/* Run Analysis Trigger */}
                 <button
-                  onClick={onRunAnalysis}
+                  onClick={handleTriggerAnalysis}
                   disabled={isLoading}
                   className={`w-full py-2 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-solar-glow ${
                     isLoading
@@ -367,7 +418,10 @@ export function HudOverlay({
           {/* Left Dock Open Button (when collapsed) */}
           {!leftOpen && (
             <button
-              onClick={() => setLeftOpen(true)}
+              onClick={() => {
+                soundEngine?.playClick();
+                setLeftOpen(true);
+              }}
               className="absolute left-3 top-16 z-20 glass-panel w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors shadow-glass"
               title="Open Mission Controls"
             >
@@ -385,7 +439,10 @@ export function HudOverlay({
           }`}
         >
           <button
-            onClick={() => setRightOpen(false)}
+            onClick={() => {
+              soundEngine?.playClick();
+              setRightOpen(false);
+            }}
             className="absolute -left-8 top-3 glass-panel w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
             title="Close Drawer"
           >

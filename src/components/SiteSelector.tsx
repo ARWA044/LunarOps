@@ -3,6 +3,7 @@
 import React from "react";
 import { CandidateSite } from "@/lib/types";
 import { ArrowLeftRight, Check, Compass, MapPin, Mountain } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface SiteSelectorProps {
   sites: CandidateSite[];
@@ -37,7 +38,10 @@ export function SiteSelector({
         </div>
 
         <button
-          onClick={onSwapSites}
+          onClick={() => {
+            soundEngine?.playClick();
+            onSwapSites();
+          }}
           className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-space-800 hover:bg-space-700 border border-space-600 text-xs font-mono text-slate-300 hover:text-white transition-colors"
           title="Swap Site A and Site B"
         >
@@ -143,7 +147,10 @@ export function SiteSelector({
               {/* Set Buttons */}
               <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2 border-t border-space-800/80">
                 <button
-                  onClick={() => onSelectSiteA(site)}
+                  onClick={() => {
+                    soundEngine?.playBeaconSelect();
+                    onSelectSiteA(site);
+                  }}
                   disabled={isA}
                   className={`text-[10px] font-mono py-1 rounded transition-colors text-center ${
                     isA
@@ -154,7 +161,10 @@ export function SiteSelector({
                   Set as A
                 </button>
                 <button
-                  onClick={() => onSelectSiteB(site)}
+                  onClick={() => {
+                    soundEngine?.playBeaconSelect();
+                    onSelectSiteB(site);
+                  }}
                   disabled={isB}
                   className={`text-[10px] font-mono py-1 rounded transition-colors text-center ${
                     isB

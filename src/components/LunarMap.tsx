@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CandidateSite } from "@/lib/types";
 import { Eye, Globe, MapPin, ZoomIn } from "lucide-react";
+import { soundEngine } from "@/lib/sound-engine";
 
 interface LunarMapProps {
   sites: CandidateSite[];
@@ -61,7 +62,10 @@ export function LunarMap({
         {/* Projection Mode Switcher */}
         <div className="flex items-center bg-space-900 rounded-lg p-0.5 border border-space-700 text-xs font-mono">
           <button
-            onClick={() => setMapMode("south-pole")}
+            onClick={() => {
+              soundEngine?.playClick();
+              setMapMode("south-pole");
+            }}
             className={`px-2.5 py-1 rounded-md transition-colors ${
               mapMode === "south-pole"
                 ? "bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40"
@@ -71,7 +75,10 @@ export function LunarMap({
             South Pole (80°S–90°S)
           </button>
           <button
-            onClick={() => setMapMode("global")}
+            onClick={() => {
+              soundEngine?.playClick();
+              setMapMode("global");
+            }}
             className={`px-2.5 py-1 rounded-md transition-colors ${
               mapMode === "global"
                 ? "bg-sky-500/20 text-sky-300 font-bold border border-sky-500/40"
@@ -243,6 +250,7 @@ export function LunarMap({
                 key={site.id}
                 className="cursor-pointer transition-transform"
                 onClick={() => {
+                  soundEngine?.playBeaconSelect();
                   if (!isA && !isB) onSelectSiteA(site);
                   else if (isA) onSelectSiteB(site);
                   else onSelectSiteA(site);

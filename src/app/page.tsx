@@ -19,6 +19,7 @@ import { VisibilityTimeline } from "@/components/VisibilityTimeline";
 import { HorizonRadar } from "@/components/HorizonRadar";
 import { TradeOffExplainer } from "@/components/TradeOffExplainer";
 import { ExportReport } from "@/components/ExportReport";
+import { soundEngine } from "@/lib/sound-engine";
 import type { CameraMode } from "@/components/LunarScene3D";
 
 // Error Boundary to prevent any WebGL context crash from breaking the UI
@@ -166,6 +167,7 @@ export default function Home() {
 
   // 3D scene site click
   const handleSiteClick = useCallback((site: CandidateSite, slot: "A" | "B") => {
+    soundEngine?.playBeaconSelect();
     if (slot === "A") setSelectedSiteA(site);
     else setSelectedSiteB(site);
   }, []);
