@@ -110,41 +110,48 @@ Site B (${data.siteB.site.name}):
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-space-850 border border-space-700/80 shadow-telemetry-card">
-      <div className="flex items-center gap-2 text-xs font-mono text-slate-300">
-        <Download className="w-4 h-4 text-amber-400" />
-        <span>Export Mission Datasets & Reports:</span>
+    <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-3xl bento-card border border-white/[0.06] shadow-bento">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+          <Download className="w-4 h-4 text-amber-400" />
+        </div>
+        <div>
+          <span className="text-[10px] font-mono tracking-widest-xl uppercase text-slate-400 font-semibold block">
+            TELEMETRY_EXPORT // ARCHIVE
+          </span>
+          <span className="font-display font-semibold text-white text-sm">Export Mission Datasets & Reports</span>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+      <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
         <button
           onClick={downloadJson}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-space-900 hover:bg-space-800 border border-space-700 text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white transition-all shadow-sm active:scale-95"
         >
           <FileText className="w-3.5 h-3.5 text-amber-400" />
-          JSON Telemetry
+          <span>JSON Telemetry</span>
         </button>
 
         <button
           onClick={downloadCsv}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-space-900 hover:bg-space-800 border border-space-700 text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white transition-all shadow-sm active:scale-95"
         >
           <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-          CSV Ephemeris Table
+          <span>CSV Ephemeris Table</span>
         </button>
 
         <button
           onClick={copySummary}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-space-900 hover:bg-space-800 border border-space-700 text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white transition-all shadow-sm active:scale-95"
         >
           {copied ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Copied!</span>
+              <span className="text-emerald-400 font-bold">Copied to Clipboard!</span>
             </>
           ) : (
             <>
-              <Share2 className="w-3.5 h-3.5 text-sky-400" />
+              <Share2 className="w-3.5 h-3.5 text-cyan-400" />
               <span>Copy Summary</span>
             </>
           )}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   ChevronRight,
@@ -132,145 +133,171 @@ export function HudOverlay({
 
   return (
     <>
-      {/* ── TOP FLOATING HEADER BAR ───────────────────────────────────────── */}
-      <div className="absolute top-0 left-0 right-0 z-30 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
-        {/* Brand & Mission Badge */}
-        <div className="flex items-center gap-2.5 glass-panel rounded-xl px-3 py-1.5 shadow-glass">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/25 via-sky-500/20 to-emerald-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
-            <Moon className="w-4 h-4 text-amber-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-white text-sm tracking-tight leading-none">LunarOps</span>
-              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                v2.6 3D
-              </span>
+      {/* ── FLOATING DETACHED ISLAND NAVBAR (TOP CENTER) ───────────────────── */}
+      <div className="absolute top-4 left-0 right-0 z-30 flex justify-center items-center pointer-events-none px-3 sm:px-6">
+        <motion.header
+          initial={{ y: -24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 140, damping: 22 }}
+          className="pointer-events-auto flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 rounded-full bg-slate-950/60 backdrop-blur-3xl border border-white/10 px-3.5 py-1.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.85),inset_0_0_0_1px_rgba(255,255,255,0.05)]"
+        >
+          {/* Brand & Mission Badge */}
+          <div className="flex items-center gap-2 pr-2.5 border-r border-white/10">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500/30 to-cyan-500/30 border border-white/20 flex items-center justify-center shrink-0 shadow-inner">
+              <Moon className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <div className="text-[9px] font-mono text-slate-400 leading-none mt-1">
-              NASA Space Apps 2026 • CLPS Browser
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-display font-bold text-white text-xs tracking-tight">LunarOps</span>
+                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                  v2.6
+                </span>
+              </div>
+              <div className="text-[8px] font-mono tracking-widest-xl text-slate-400 uppercase hidden sm:block">
+                NASA Space Apps
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* View Switcher: 🌌 3D Orbital HUD vs 📊 Full Analytics */}
-        <div className="flex items-center glass-panel rounded-xl p-1 gap-1 shadow-glass">
-          <button
-            onClick={() => handleViewChange("3d")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
-              viewMode === "3d"
-                ? "bg-amber-500 text-space-950 font-bold shadow-solar-glow"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <Orbit className="w-3.5 h-3.5" />
-            <span>🌌 3D Orbital HUD</span>
-          </button>
-          <button
-            onClick={() => handleViewChange("analytics")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
-              viewMode === "analytics"
-                ? "bg-sky-500 text-space-950 font-bold shadow-earth-glow"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span>📊 Full Analytics</span>
-          </button>
-        </div>
+          {/* View Switcher: 🌌 3D Orbital HUD vs 📊 Full Analytics (Sliding Magnetic Pill) */}
+          <div className="flex items-center bg-black/40 rounded-full p-1 border border-white/[0.08] relative">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleViewChange("3d")}
+              className={`relative z-10 flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono font-medium transition-colors light-sheen ${
+                viewMode === "3d" ? "text-space-950 font-bold" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {viewMode === "3d" && (
+                <motion.div
+                  layoutId="activeNavView"
+                  className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full shadow-[0_0_16px_rgba(245,158,11,0.5)] z-[-1]"
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                />
+              )}
+              <Orbit className="w-3.5 h-3.5" />
+              <span>3D Orbital HUD</span>
+            </motion.button>
 
-        {/* Camera Mode Toggles (System Orbit, Lunar South Pole, Site A Lock, Site B Lock) */}
-        {viewMode === "3d" && (
-          <div className="flex items-center glass-panel rounded-xl p-1 gap-0.5 shadow-glass">
-            {cameraModes.map((cm) => (
-              <button
-                key={cm.key}
-                onClick={() => handleCameraChange(cm.key)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
-                  cameraMode === cm.key
-                    ? "bg-white/15 text-white font-bold border border-white/20"
-                    : "text-slate-400 hover:text-white"
-                }`}
-                title={`Switch camera to ${cm.label}`}
-              >
-                {cm.icon}
-                <span className="hidden md:inline">{cm.label}</span>
-              </button>
-            ))}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleViewChange("analytics")}
+              className={`relative z-10 flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono font-medium transition-colors light-sheen ${
+                viewMode === "analytics" ? "text-space-950 font-bold" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {viewMode === "analytics" && (
+                <motion.div
+                  layoutId="activeNavView"
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full shadow-[0_0_16px_rgba(0,240,255,0.5)] z-[-1]"
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                />
+              )}
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Full Analytics</span>
+            </motion.button>
           </div>
-        )}
 
-        {/* Holographic 3D Analysis Mode Toggle */}
-        {viewMode === "3d" && (
-          <button
-            onClick={() => {
-              soundEngine?.playClick();
-              onToggleAnalysisMode();
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all shadow-glass border ${
-              isAnalysisMode
-                ? "bg-cyan-500 text-space-950 border-cyan-300 shadow-[0_0_24px_rgba(0,240,255,0.7)] animate-pulse"
-                : "glass-panel text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
-            }`}
-            title="Toggle Holographic Blueprint / X-Ray Wireframe Mode"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>{isAnalysisMode ? "🔬 Holographic: ON" : "🔬 Analysis Mode"}</span>
-          </button>
-        )}
+          {/* Camera Modes (in 3D mode) */}
+          {viewMode === "3d" && (
+            <div className="hidden lg:flex items-center bg-black/30 rounded-full p-0.5 border border-white/[0.06]">
+              {cameraModes.map((cm) => (
+                <button
+                  key={cm.key}
+                  onClick={() => handleCameraChange(cm.key)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono transition-all ${
+                    cameraMode === cm.key
+                      ? "bg-white/15 text-white font-bold border border-white/20 shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                  title={`Switch camera to ${cm.label}`}
+                >
+                  {cm.icon}
+                  <span>{cm.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
-        <div className="flex items-center gap-2">
-          {/* Sound Synthesizer Engine Widget */}
-          <SoundWidget />
+          {/* Holographic 3D Analysis Mode Toggle */}
+          {viewMode === "3d" && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                soundEngine?.playClick();
+                onToggleAnalysisMode();
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all border light-sheen ${
+                isAnalysisMode
+                  ? "bg-cyan-500 text-space-950 border-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.7)] animate-pulse"
+                  : "bg-white/[0.04] text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60 hover:bg-cyan-500/10"
+              }`}
+              title="Toggle Holographic Blueprint / X-Ray Wireframe Mode"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isAnalysisMode ? "Holo: ON" : "Analysis Mode"}</span>
+            </motion.button>
+          )}
 
-          {/* Scientific Disclaimer Toggle Badge */}
-          <button
-            onClick={() => {
-              soundEngine?.playClick();
-              setShowFullDisclaimer((p) => !p);
-            }}
-            className="flex items-center gap-1.5 glass-panel rounded-xl px-2.5 py-1.5 text-[10px] font-mono text-amber-300 border border-amber-500/30 hover:border-amber-500/60 transition-colors shadow-glass"
-            title="Click to view full NASA scientific disclaimer"
-          >
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="hidden sm:inline">Scientific Disclaimer</span>
-          </button>
+          {/* Actions Right Group */}
+          <div className="flex items-center gap-1.5 pl-1">
+            <SoundWidget />
 
-          {/* Right Analytics Drawer Toggle Button (in 3D mode) */}
-          {viewMode === "3d" && comparisonData && (
             <button
               onClick={() => {
                 soundEngine?.playClick();
-                setRightOpen((p) => !p);
+                setShowFullDisclaimer((p) => !p);
               }}
-              className={`glass-panel rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-mono transition-all shadow-glass ${
-                rightOpen ? "bg-sky-500/20 text-sky-300 border-sky-500/50" : "text-slate-300 hover:text-white"
-              }`}
+              className="flex items-center gap-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] px-2.5 py-1 text-[10px] font-mono text-amber-300 border border-amber-500/25 transition-colors"
+              title="Click to view NASA scientific disclaimer"
             >
-              <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
-              <span className="hidden sm:inline">Analytics Drawer</span>
+              <ShieldAlert className="w-3 h-3 text-amber-400 shrink-0" />
+              <span className="hidden xl:inline">Disclaimer</span>
             </button>
-          )}
-        </div>
+
+            {viewMode === "3d" && comparisonData && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  soundEngine?.playClick();
+                  setRightOpen((p) => !p);
+                }}
+                className={`rounded-full px-3 py-1 flex items-center gap-1.5 text-xs font-mono transition-all border ${
+                  rightOpen
+                    ? "bg-sky-500/20 text-sky-300 border-sky-500/50 shadow-[0_0_12px_rgba(0,240,255,0.3)]"
+                    : "bg-white/[0.04] border-white/10 text-slate-300 hover:text-white"
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline">Drawer</span>
+              </motion.button>
+            )}
+          </div>
+        </motion.header>
       </div>
 
       {/* ── EXPANDABLE SCIENTIFIC DISCLAIMER MODAL / BANNER ───────────────── */}
       {showFullDisclaimer && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-2xl glass-panel rounded-xl p-3.5 border-2 border-amber-500/50 shadow-solar-glow animate-fadeIn">
+        <div className="absolute top-18 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-xl bento-card rounded-2xl p-4 border border-amber-500/40 shadow-[0_16px_48px_rgba(0,0,0,0.85)] animate-fadeIn">
           <div className="flex items-start justify-between gap-3 text-xs font-mono">
             <div className="flex items-start gap-2.5">
               <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <strong className="text-amber-300 font-bold block mb-1">
-                  NASA SPACE APPS SCIENTIFIC DISCLAIMER:
+                <strong className="text-amber-300 font-bold block mb-1 text-[11px] tracking-wider uppercase">
+                  NASA Space Apps Scientific Disclaimer:
                 </strong>
-                <p className="text-slate-200 leading-relaxed text-[11px]">
+                <p className="text-slate-200 leading-relaxed text-[11px] font-sans">
                   "Seeing the Sun does not directly calculate electrical power, and seeing Earth does not guarantee a successful radio connection. LunarOps measures potential illumination and line-of-sight windows above local LOLA lunar terrain."
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowFullDisclaimer(false)}
-              className="px-2 py-0.5 rounded bg-space-800 text-slate-400 hover:text-white border border-space-700 text-xs"
+              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition-colors"
             >
               ✕
             </button>
@@ -282,8 +309,8 @@ export function HudOverlay({
       {viewMode === "3d" && (
         <>
           <div
-            className={`absolute left-3 top-16 bottom-24 z-20 w-80 hud-slide-left flex flex-col gap-2.5 ${
-              leftOpen ? "translate-x-0 opacity-100" : "-translate-x-84 opacity-0 pointer-events-none"
+            className={`absolute left-3 top-18 bottom-24 z-20 w-84 hud-slide-left flex flex-col gap-2.5 ${
+              leftOpen ? "translate-x-0 opacity-100" : "-translate-x-88 opacity-0 pointer-events-none"
             }`}
           >
             {/* Collapse toggle */}
@@ -292,34 +319,34 @@ export function HudOverlay({
                 soundEngine?.playClick();
                 setLeftOpen(false);
               }}
-              className="absolute -right-8 top-2 glass-panel w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
+              className="absolute -right-8 top-2 bento-card w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
               title="Collapse Dock"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
             {/* Dock Tab Selector: Story Mode vs Manual Telemetry */}
-            <div className="flex items-center glass-panel rounded-xl p-1 gap-1 shrink-0 shadow-glass">
+            <div className="flex items-center bento-card rounded-full p-1 gap-1 shrink-0">
               <button
                 onClick={() => {
                   soundEngine?.playClick();
                   setLeftTab("story");
                 }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-[11px] font-mono transition-all ${
                   leftTab === "story"
                     ? "bg-gradient-to-r from-amber-500/25 to-sky-500/25 text-white font-bold border border-white/20 shadow-solar-glow"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Story Mode</span>
+                <span>Story Guide</span>
               </button>
               <button
                 onClick={() => {
                   soundEngine?.playClick();
                   setLeftTab("manual");
                 }}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-[11px] font-mono transition-all ${
                   leftTab === "manual"
                     ? "bg-white/15 text-white font-bold border border-white/20"
                     : "text-slate-400 hover:text-white"
@@ -353,20 +380,20 @@ export function HudOverlay({
               ) : (
                 <>
                   {/* Site A Card */}
-                  <div className="glass-panel rounded-xl p-3 border-l-4 border-l-amber-500">
+                  <div className="bento-card rounded-2xl p-3.5 border-l-2 border-l-amber-400">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider">
+                      <span className="text-[10px] font-mono text-amber-400 font-semibold tracking-widest-xl uppercase">
                         Site A — Target
                       </span>
                       <button
                         onClick={handleSwap}
-                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-colors"
+                        className="p-1 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-colors"
                         title="Swap Site A and Site B"
                       >
                         <ArrowLeftRight className="w-3 h-3" />
                       </button>
                     </div>
-                    <div className="text-sm font-bold text-white truncate">{selectedSiteA.name}</div>
+                    <div className="text-sm font-display font-bold text-white truncate">{selectedSiteA.name}</div>
                     <div className="text-[10px] font-mono text-amber-300 mt-0.5">{selectedSiteA.coordinatesDisplay}</div>
                     <div className="text-[10px] text-slate-400 truncate mt-0.5">{selectedSiteA.targetMission}</div>
 
@@ -377,10 +404,10 @@ export function HudOverlay({
                         const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                         if (found) handleSiteSelectA(found);
                       }}
-                      className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-500"
+                      className="w-full mt-2 bg-black/50 border border-white/10 rounded-xl px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-400"
                     >
                       {CANDIDATE_SITES.map((site) => (
-                        <option key={site.id} value={site.id}>
+                        <option key={site.id} value={site.id} className="bg-slate-900 text-white">
                           {site.badge}: {site.name} ({site.category})
                         </option>
                       ))}
@@ -388,14 +415,14 @@ export function HudOverlay({
                   </div>
 
                   {/* Site B Card */}
-                  <div className="glass-panel rounded-xl p-3 border-l-4 border-l-sky-500">
+                  <div className="bento-card rounded-2xl p-3.5 border-l-2 border-l-cyan-400">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-mono text-sky-400 font-bold uppercase tracking-wider">
+                      <span className="text-[10px] font-mono text-cyan-400 font-semibold tracking-widest-xl uppercase">
                         Site B — Benchmark
                       </span>
                     </div>
-                    <div className="text-sm font-bold text-white truncate">{selectedSiteB.name}</div>
-                    <div className="text-[10px] font-mono text-sky-300 mt-0.5">{selectedSiteB.coordinatesDisplay}</div>
+                    <div className="text-sm font-display font-bold text-white truncate">{selectedSiteB.name}</div>
+                    <div className="text-[10px] font-mono text-cyan-300 mt-0.5">{selectedSiteB.coordinatesDisplay}</div>
                     <div className="text-[10px] text-slate-400 truncate mt-0.5">{selectedSiteB.targetMission}</div>
 
                     <select
@@ -404,10 +431,10 @@ export function HudOverlay({
                         const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                         if (found) handleSiteSelectB(found);
                       }}
-                      className="w-full mt-2 bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"
+                      className="w-full mt-2 bg-black/50 border border-white/10 rounded-xl px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-400"
                     >
                       {CANDIDATE_SITES.map((site) => (
-                        <option key={site.id} value={site.id}>
+                        <option key={site.id} value={site.id} className="bg-slate-900 text-white">
                           {site.badge}: {site.name} ({site.category})
                         </option>
                       ))}
@@ -437,28 +464,28 @@ export function HudOverlay({
                   )}
 
                   {/* UTC Dates & Presets Control Panel */}
-                  <div className="glass-panel rounded-xl p-3 space-y-2.5">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-                      <span>Mission Ephemeris Time</span>
+                  <div className="bento-card rounded-2xl p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 tracking-widest-xl uppercase">
+                      <span>Mission Ephemeris</span>
                       <Sliders className="w-3 h-3 text-amber-400" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-mono text-slate-500 block mb-0.5">START UTC</label>
+                        <label className="text-[9px] font-mono tracking-widest uppercase text-slate-500 block mb-0.5">START UTC</label>
                         <input
                           type="date"
                           value={startDate}
                           onChange={(e) => onStartDateChange(e.target.value)}
-                          className="w-full bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
+                          className="w-full bg-black/50 border border-white/10 rounded-xl px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-400"
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] font-mono text-slate-500 block mb-0.5">END UTC</label>
+                        <label className="text-[9px] font-mono tracking-widest uppercase text-slate-500 block mb-0.5">END UTC</label>
                         <input
                           type="date"
                           value={endDate}
                           onChange={(e) => onEndDateChange(e.target.value)}
-                          className="w-full bg-space-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
+                          className="w-full bg-black/50 border border-white/10 rounded-xl px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-amber-400"
                         />
                       </div>
                     </div>
@@ -473,7 +500,7 @@ export function HudOverlay({
                         <button
                           key={preset.label}
                           onClick={() => handlePreset(preset.start, preset.end)}
-                          className="py-1 rounded-lg text-[9px] font-mono bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors text-center"
+                          className="py-1 rounded-full text-[9px] font-mono bg-white/[0.04] hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors text-center"
                         >
                           {preset.label}
                         </button>
@@ -481,17 +508,19 @@ export function HudOverlay({
                     </div>
 
                     {/* Run Analysis Trigger */}
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={handleTriggerAnalysis}
                       disabled={isLoading}
-                      className={`w-full py-2 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-solar-glow ${
+                      className={`w-full py-2.5 rounded-full font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all light-sheen ${
                         isLoading
-                          ? "bg-amber-600/50 text-amber-200 cursor-not-allowed"
-                          : "bg-amber-500 hover:bg-amber-400 text-space-950 active:scale-95"
+                          ? "bg-amber-600/40 text-amber-200/60 cursor-not-allowed border border-amber-500/20"
+                          : "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-space-950 shadow-[0_0_20px_rgba(245,158,11,0.45)]"
                       }`}
                     >
                       {isLoading ? "CALCULATING LOLA MASKS…" : "▶ RUN ANALYSIS"}
-                    </button>
+                    </motion.button>
                   </div>
                 </>
               )}
@@ -505,7 +534,7 @@ export function HudOverlay({
                 soundEngine?.playClick();
                 setLeftOpen(true);
               }}
-              className="absolute left-3 top-16 z-20 glass-panel w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors shadow-glass"
+              className="absolute left-3 top-18 z-20 bento-card w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors shadow-glass"
               title="Open Mission Controls"
             >
               <Menu className="w-4 h-4" />
@@ -517,8 +546,8 @@ export function HudOverlay({
       {/* ── RIGHT EXPANDABLE ANALYTICS DRAWER (in 3D mode) ────────────────── */}
       {viewMode === "3d" && comparisonData && (
         <div
-          className={`absolute right-3 top-16 bottom-24 z-20 w-[540px] max-w-[90vw] hud-slide-right flex flex-col gap-3 ${
-            rightOpen ? "translate-x-0 opacity-100" : "translate-x-[560px] opacity-0 pointer-events-none"
+          className={`absolute right-3 top-18 bottom-24 z-20 w-[560px] max-w-[92vw] hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
+            rightOpen ? "translate-x-0 opacity-100" : "translate-x-[580px] opacity-0 pointer-events-none"
           }`}
         >
           <button
@@ -526,7 +555,7 @@ export function HudOverlay({
               soundEngine?.playClick();
               setRightOpen(false);
             }}
-            className="absolute -left-8 top-3 glass-panel w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
+            className="absolute -left-8 top-3 bento-card w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
             title="Close Drawer"
           >
             <ChevronRight className="w-3.5 h-3.5" />

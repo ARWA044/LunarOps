@@ -521,9 +521,9 @@ export function LunarScene3D({
     // Holographic X-Ray blueprint wireframe material
     const moonHoloMat = new THREE.MeshBasicMaterial({
       wireframe: true,
-      color: 0x00f0ff,
+      color: 0x0891b2,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.22,
     });
 
     const moonNormalMesh = new THREE.Mesh(
@@ -551,9 +551,9 @@ export function LunarScene3D({
     const moonHoloGlow = new THREE.Mesh(
       new THREE.SphereGeometry(MOON_RADIUS * 1.045, 32, 32),
       new THREE.MeshBasicMaterial({
-        color: 0x00f0ff,
+        color: 0x0891b2,
         transparent: true,
-        opacity: 0.28,
+        opacity: 0.12,
         side: THREE.BackSide,
       })
     );
@@ -737,9 +737,9 @@ export function LunarScene3D({
         targetCamPos = new THREE.Vector3(14, 9, 14);
         targetCamLook = new THREE.Vector3(0, 0, 0);
       } else if (st.cameraMode === "southPole") {
-        // Dramatic view right below the South Pole crater rims
-        targetCamPos = curMoonPos.clone().add(new THREE.Vector3(0.06, -MOON_RADIUS * 2.3, 0.42));
-        targetCamLook = curMoonPos.clone().add(new THREE.Vector3(0, -MOON_RADIUS * 0.96, 0));
+        // Dramatic view right below the South Pole crater rims with realistic depth
+        targetCamPos = curMoonPos.clone().add(new THREE.Vector3(0.45, -MOON_RADIUS * 3.6, 1.25));
+        targetCamLook = curMoonPos.clone().add(new THREE.Vector3(0, -MOON_RADIUS * 0.95, 0));
       } else if (st.cameraMode === "siteA") {
         const local = latLonToVec3(st.selectedSiteA.latitude, st.selectedSiteA.longitude, MOON_RADIUS * 2.2);
         targetCamPos = curMoonPos.clone().add(local);
@@ -862,8 +862,8 @@ export function LunarScene3D({
         reticleB.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), reticleBPos.clone().normalize());
         reticleB.rotateZ(-elapsed * 0.5);
 
-        bloomPass.strength = 1.4;
-        bloomPass.threshold = 0.16;
+        bloomPass.strength = 0.72;
+        bloomPass.threshold = 0.28;
       } else {
         bloomPass.strength = 0.85;
         bloomPass.threshold = 0.28;

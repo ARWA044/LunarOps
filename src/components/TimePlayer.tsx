@@ -88,16 +88,18 @@ export function TimePlayer({
     : "—";
 
   return (
-    <div className="glass-panel rounded-2xl px-4 py-2.5 flex flex-col gap-2 shadow-glass-lg border border-white/10">
+    <div className="bento-card rounded-2xl sm:rounded-3xl px-5 py-3 flex flex-col gap-2.5 shadow-[0_16px_48px_0_rgba(0,0,0,0.85)] border border-white/10 max-w-5xl mx-auto backdrop-blur-3xl">
       {/* Top row: status indicators */}
       <div className="flex items-center justify-between gap-4 text-[10px] font-mono">
-        <span className="text-slate-400 tracking-widest uppercase">Mission Epoch</span>
-        <span className="text-white font-bold text-xs tabular-nums">{utcLabel}</span>
-        <div className="flex items-center gap-2">
+        <span className="text-slate-400 tracking-widest-xl uppercase font-semibold">Mission Epoch</span>
+        <span className="text-white font-display font-bold text-xs sm:text-sm tabular-nums tracking-wide">{utcLabel}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {currentStepA && (
             <span
-              className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepA.isSunVisible ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
+              className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider transition-colors ${
+                currentStepA.isSunVisible
+                  ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.25)]"
+                  : "bg-red-500/15 text-red-300 border border-red-500/30"
               }`}
             >
               A-SUN {currentStepA.isSunVisible ? "ON" : "OFF"}
@@ -105,8 +107,10 @@ export function TimePlayer({
           )}
           {currentStepA && (
             <span
-              className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepA.isEarthVisible ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
+              className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider transition-colors ${
+                currentStepA.isEarthVisible
+                  ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-[0_0_8px_rgba(0,240,255,0.25)]"
+                  : "bg-red-500/15 text-red-300 border border-red-500/30"
               }`}
             >
               A-DTE {currentStepA.isEarthVisible ? "CLR" : "BLK"}
@@ -114,8 +118,10 @@ export function TimePlayer({
           )}
           {currentStepB && (
             <span
-              className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepB.isSunVisible ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
+              className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider transition-colors ${
+                currentStepB.isSunVisible
+                  ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.25)]"
+                  : "bg-red-500/15 text-red-300 border border-red-500/30"
               }`}
             >
               B-SUN {currentStepB.isSunVisible ? "ON" : "OFF"}
@@ -123,8 +129,10 @@ export function TimePlayer({
           )}
           {currentStepB && (
             <span
-              className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                currentStepB.isEarthVisible ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
+              className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider transition-colors ${
+                currentStepB.isEarthVisible
+                  ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-[0_0_8px_rgba(0,240,255,0.25)]"
+                  : "bg-red-500/15 text-red-300 border border-red-500/30"
               }`}
             >
               B-DTE {currentStepB.isEarthVisible ? "CLR" : "BLK"}
@@ -134,12 +142,12 @@ export function TimePlayer({
       </div>
 
       {/* Timeline track with site windows overlaid */}
-      <div className="relative h-5 bg-white/5 rounded-lg overflow-hidden border border-white/10">
+      <div className="relative h-4 bg-black/60 rounded-full overflow-hidden border border-white/[0.08] shadow-inner p-0.5">
         {total > 0 &&
           telemetryA.map((t, i) => (
             <div
               key={`sun-a-${i}`}
-              className={`absolute top-0 bottom-0 ${t?.isSunVisible ? "bg-amber-500/50" : ""}`}
+              className={`absolute top-0 bottom-0 ${t?.isSunVisible ? "bg-amber-500/40" : ""}`}
               style={{ left: `${(i / Math.max(1, total - 1)) * 100}%`, width: `${Math.max(0.5, 100 / total)}%` }}
             />
           ))}
@@ -147,14 +155,14 @@ export function TimePlayer({
           telemetryA.map((t, i) => (
             <div
               key={`earth-a-${i}`}
-              className={`absolute top-[50%] bottom-0 ${t?.isEarthVisible ? "bg-sky-500/60" : ""}`}
+              className={`absolute top-[50%] bottom-0 ${t?.isEarthVisible ? "bg-cyan-500/50" : ""}`}
               style={{ left: `${(i / Math.max(1, total - 1)) * 100}%`, width: `${Math.max(0.5, 100 / total)}%` }}
             />
           ))}
 
         {/* Playhead */}
         <div
-          className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_8px_white] z-10"
+          className="absolute top-0 bottom-0 w-1.5 bg-white rounded-full shadow-[0_0_10px_white] z-10"
           style={{ left: `${pct}%` }}
         />
 
@@ -175,16 +183,16 @@ export function TimePlayer({
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleStepBack}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
             title="Step Back 10 Hours"
           >
             <Rewind className="w-3 h-3" />
           </button>
           <button
             onClick={handleTogglePlay}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition-all light-sheen ${
               isPlaying
-                ? "bg-amber-500 text-space-950 font-bold shadow-solar-glow"
+                ? "bg-gradient-to-r from-amber-500 to-amber-400 text-space-950 font-bold shadow-[0_0_16px_rgba(245,158,11,0.5)]"
                 : "bg-white/10 text-slate-200 hover:bg-white/15 border border-white/15"
             }`}
             title={isPlaying ? "Pause Simulation" : "Play Simulation"}
@@ -193,7 +201,7 @@ export function TimePlayer({
           </button>
           <button
             onClick={handleStepForward}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
             title="Step Forward 10 Hours"
           >
             <SkipForward className="w-3 h-3" />
@@ -202,18 +210,18 @@ export function TimePlayer({
 
         {/* Progress label */}
         <span className="text-[10px] font-mono text-slate-400 tabular-nums">
-          {total > 0 ? currentIndex + 1 : 0} / {total} <span className="text-slate-600">steps</span>
+          {total > 0 ? currentIndex + 1 : 0} / {total} <span className="text-slate-500">steps</span>
         </span>
 
         {/* Speed selector */}
-        <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
+        <div className="flex items-center gap-0.5 bg-black/40 rounded-full p-0.5 border border-white/10">
           {SPEEDS.map((s) => (
             <button
               key={s.value}
               onClick={() => handleSetSpeed(s.value)}
-              className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-bold transition-all ${
+              className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold transition-all ${
                 playSpeed === s.value
-                  ? "bg-amber-500 text-space-950"
+                  ? "bg-amber-500 text-space-950 shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -226,15 +234,15 @@ export function TimePlayer({
         {currentStepA && (
           <div className="hidden lg:flex items-center gap-3 text-[10px] font-mono tabular-nums">
             <span className="text-slate-400">Site A:</span>
-            <span className="text-amber-400 font-bold">☀ {currentStepA.sunElevation}°</span>
-            <span className="text-sky-400 font-bold">⊕ {currentStepA.earthElevation}°</span>
+            <span className="text-amber-400 font-semibold">☀ {currentStepA.sunElevation}°</span>
+            <span className="text-cyan-400 font-semibold">⊕ {currentStepA.earthElevation}°</span>
           </div>
         )}
         {currentStepB && (
           <div className="hidden xl:flex items-center gap-3 text-[10px] font-mono tabular-nums">
             <span className="text-slate-400">Site B:</span>
-            <span className="text-amber-400 font-bold">☀ {currentStepB.sunElevation}°</span>
-            <span className="text-sky-400 font-bold">⊕ {currentStepB.earthElevation}°</span>
+            <span className="text-amber-400 font-semibold">☀ {currentStepB.sunElevation}°</span>
+            <span className="text-cyan-400 font-semibold">⊕ {currentStepB.earthElevation}°</span>
           </div>
         )}
       </div>

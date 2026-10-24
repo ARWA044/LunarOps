@@ -50,42 +50,50 @@ export function LunarMap({
   };
 
   return (
-    <div className="bg-space-850 border border-space-700/80 rounded-xl p-4 sm:p-5 shadow-telemetry-card relative">
-      <div className="flex items-center justify-between pb-3 mb-3 border-b border-space-700/60">
-        <div className="flex items-center gap-2">
-          <Globe className="w-5 h-5 text-sky-400" />
-          <h2 className="text-base font-bold text-white tracking-wide">
-            Interactive Lunar Mission Surface Map
-          </h2>
+    <div className="bento-card rounded-3xl p-5 sm:p-6 border border-white/[0.06] shadow-bento relative flex flex-col justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-white/[0.06] gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00f0ff]" />
+            <span className="text-[10px] font-mono tracking-widest-xl uppercase text-cyan-400/90 font-semibold">
+              SURFACE_TOPOGRAPHY // LROC_BASEMAP
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.6)] shrink-0" />
+            <h2 className="text-base font-display font-bold text-white tracking-tight flex items-center gap-2">
+              Interactive Surface Map
+            </h2>
+          </div>
         </div>
 
         {/* Projection Mode Switcher */}
-        <div className="flex items-center bg-space-900 rounded-lg p-0.5 border border-space-700 text-xs font-mono">
+        <div className="flex items-center bg-black/60 rounded-full p-1 border border-white/10 text-xs font-mono shrink-0">
           <button
             onClick={() => {
               soundEngine?.playClick();
               setMapMode("south-pole");
             }}
-            className={`px-2.5 py-1 rounded-md transition-colors ${
+            className={`px-3 py-1.5 rounded-full transition-all ${
               mapMode === "south-pole"
-                ? "bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40"
+                ? "bg-amber-500 text-space-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            South Pole (80°S–90°S)
+            South Pole
           </button>
           <button
             onClick={() => {
               soundEngine?.playClick();
               setMapMode("global");
             }}
-            className={`px-2.5 py-1 rounded-md transition-colors ${
+            className={`px-3 py-1.5 rounded-full transition-all ${
               mapMode === "global"
-                ? "bg-sky-500/20 text-sky-300 font-bold border border-sky-500/40"
+                ? "bg-cyan-400 text-space-950 font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            Global Orthographic
+            Global Globe
           </button>
         </div>
       </div>

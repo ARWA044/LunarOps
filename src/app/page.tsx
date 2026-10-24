@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback, Suspense, Component, ErrorInfo, ReactNode } from "react";
 import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { CANDIDATE_SITES } from "@/lib/lola-terrain";
 import { analyzeSiteVisibility } from "@/lib/astronomical";
@@ -200,23 +201,40 @@ export default function Home() {
 
       {/* ── FULL ANALYTICS VIEW (scrollable split-view) ──────────────────── */}
       {viewMode === "analytics" && (
-        <div className="absolute inset-0 z-10 overflow-y-auto bg-telemetry-grid bg-space-950">
-          <div className="max-w-7xl mx-auto px-4 pt-20 pb-16 space-y-6">
+        <div className="absolute inset-0 z-10 overflow-y-auto bg-[#04070D] bg-telemetry-grid text-slate-100">
+          <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,165,233,0.06),rgba(255,255,255,0))]" />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-7xl mx-auto px-4 pt-24 pb-24 space-y-6 relative z-10"
+          >
             {/* Controls Bar */}
-            <Controls
-              startDate={startDate}
-              endDate={endDate}
-              stepHours={stepHours}
-              isLoading={isLoading}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              onStepHoursChange={setStepHours}
-              onRunAnalysis={runAnalysis}
-              onApplyPreset={(s, e) => { setStartDate(s); setEndDate(e); }}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.05 }}
+            >
+              <Controls
+                startDate={startDate}
+                endDate={endDate}
+                stepHours={stepHours}
+                isLoading={isLoading}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                onStepHoursChange={setStepHours}
+                onRunAnalysis={runAnalysis}
+                onApplyPreset={(s, e) => { setStartDate(s); setEndDate(e); }}
+              />
+            </motion.div>
 
             {/* Site Selector & Interactive 2D Lunar Map */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.1 }}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+            >
               <div className="lg:col-span-7">
                 <SiteSelector
                   sites={CANDIDATE_SITES}
@@ -236,28 +254,69 @@ export default function Home() {
                   onSelectSiteB={setSelectedSiteB}
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* Comparison Charts & Dashboards */}
             {comparisonData ? (
               <div className="space-y-6">
-                <KpiCards siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
-                <ElevationChart siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
-                <VisibilityTimeline siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
-                <HorizonRadar siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
-                <TradeOffExplainer
-                  summary={comparisonData.summaryNarrative}
-                  siteA={comparisonData.siteA}
-                  siteB={comparisonData.siteB}
-                />
-                <ExportReport data={comparisonData} />
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.15 }}
+                >
+                  <KpiCards siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.2 }}
+                >
+                  <ElevationChart siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.25 }}
+                >
+                  <VisibilityTimeline siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.3 }}
+                >
+                  <HorizonRadar siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.35 }}
+                >
+                  <TradeOffExplainer
+                    summary={comparisonData.summaryNarrative}
+                    siteA={comparisonData.siteA}
+                    siteB={comparisonData.siteB}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", damping: 24, stiffness: 120, delay: 0.4 }}
+                >
+                  <ExportReport data={comparisonData} />
+                </motion.div>
               </div>
             ) : (
               <div className="flex items-center justify-center h-48 text-slate-500 font-mono text-sm">
                 {isLoading ? "Computing mission telemetry…" : "Run analysis to view charts."}
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
 

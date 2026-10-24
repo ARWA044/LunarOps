@@ -93,29 +93,35 @@ export function HorizonRadar({ siteA, siteB }: HorizonRadarProps) {
     .join(" ") + " Z";
 
   return (
-    <div className="bg-space-850 border border-space-700/80 rounded-xl p-4 sm:p-5 shadow-telemetry-card">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-3 border-b border-space-700/60 gap-3">
+    <div className="bento-card rounded-3xl p-5 sm:p-6 border border-white/[0.06] shadow-bento">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-3 border-b border-white/[0.06] gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <Mountain className="w-5 h-5 text-amber-400" />
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
-              360° Local Terrain Horizon Profile (NASA LOLA DEM)
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]" />
+            <span className="text-[10px] font-mono tracking-widest-xl uppercase text-amber-400/90 font-semibold">
+              RELIEF_SCANNER // 360_HORIZON_MASK
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Mountain className="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] shrink-0" />
+            <h2 className="text-base sm:text-lg font-display font-bold text-white tracking-tight flex items-center gap-2">
+              360° Local Terrain Horizon Profile (LOLA DEM)
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Surrounding lunar crater rims & ridge elevation masks ($0^\circ$ to $360^\circ$ azimuth) that obstruct Sun & Earth LoS.
+          <p className="text-xs text-slate-400 mt-1">
+            Surrounding lunar crater rims & ridge elevation masks (0° to 360° azimuth) that obstruct Sun & Earth LoS.
           </p>
         </div>
 
         {/* View Switchers */}
         <div className="flex items-center gap-2">
           {/* Display Mode */}
-          <div className="flex items-center bg-space-900 rounded-lg p-0.5 border border-space-700 text-xs font-mono">
+          <div className="flex items-center bg-black/60 rounded-full p-1 border border-white/10 text-xs font-mono shrink-0">
             <button
               onClick={() => setViewMode("unwrapped")}
-              className={`px-2.5 py-1 rounded-md transition-all ${
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
                 viewMode === "unwrapped"
-                  ? "bg-amber-500 text-space-950 font-bold"
+                  ? "bg-amber-500 text-space-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -123,9 +129,9 @@ export function HorizonRadar({ siteA, siteB }: HorizonRadarProps) {
             </button>
             <button
               onClick={() => setViewMode("polar")}
-              className={`px-2.5 py-1 rounded-md transition-all ${
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
                 viewMode === "polar"
-                  ? "bg-amber-500 text-space-950 font-bold"
+                  ? "bg-amber-500 text-space-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -136,25 +142,25 @@ export function HorizonRadar({ siteA, siteB }: HorizonRadarProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono py-1.5 px-3 bg-space-900/60 rounded-lg border border-space-800 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono py-2 px-3.5 bg-black/30 rounded-xl border border-white/[0.06] mb-3">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-amber-400">
-            <span className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500 inline-block"></span>
+          <span className="flex items-center gap-1.5 text-amber-400 font-medium">
+            <span className="w-3 h-3 rounded-md bg-amber-500/30 border border-amber-500 inline-block shadow-[0_0_6px_rgba(245,158,11,0.4)]"></span>
             Site A Horizon: {siteA.site.name}
           </span>
-          <span className="flex items-center gap-1.5 text-sky-400">
-            <span className="w-3 h-3 rounded bg-sky-500/30 border border-sky-500 inline-block"></span>
+          <span className="flex items-center gap-1.5 text-cyan-400 font-medium">
+            <span className="w-3 h-3 rounded-md bg-cyan-500/30 border border-cyan-400 inline-block shadow-[0_0_6px_rgba(0,240,255,0.4)]"></span>
             Site B Horizon: {siteB.site.name}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400">
+        <span className="text-[11px] text-slate-400 font-sans">
           Source: NASA Lunar Reconnaissance Orbiter (LRO) / LOLA Gridded Data Record
         </span>
       </div>
 
       {/* Graphic Display */}
       {viewMode === "unwrapped" ? (
-        <div className="relative overflow-x-auto bg-space-950/80 rounded-xl p-2 border border-space-800">
+        <div className="relative overflow-x-auto bg-[#040814]/90 rounded-xl p-3 border border-white/[0.08] shadow-inner">
           <svg
             viewBox={`0 0 ${width} ${height}`}
             className="w-full h-auto min-w-[650px] select-none"

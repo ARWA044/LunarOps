@@ -64,3 +64,11 @@ yarn-error.log*
 crash.log
 .terraform/
 .terraform.lock.hcl
+
+# Python & Node Exclusions
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.DS_Store
