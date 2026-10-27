@@ -910,3 +910,6 @@ export function LunarScene3D({
 
   return <div ref={containerRef} className="w-full h-full select-none" />;
 }
+
+export default LunarScene3D;
+
