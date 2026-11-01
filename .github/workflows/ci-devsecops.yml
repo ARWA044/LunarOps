@@ -48,6 +48,18 @@ jobs:
       - name: Run Backend Pytest Suite
         run: |
           PYTHONPATH=. pytest -v backend/tests/test_api.py
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build frontend
+        run: docker build -t lunarops-frontend:ci -f Dockerfile .
+
+      - name: Build backend
+        run: docker build -t lunarops-backend:ci -f backend/Dockerfile .
 
   security-gitleaks:
     name: DevSecOps — Secret Detection (Gitleaks)
