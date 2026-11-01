@@ -2,9 +2,9 @@ name: LunarOps CI & DevSecOps Pipeline
 
 on:
   push:
-    branches: [main, master, "release/*"]
+    branches: [main, devsecops/setup]
   pull_request:
-    branches: [main, master]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
