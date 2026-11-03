@@ -85,4 +85,9 @@ resource "aws_ecs_service" "frontend" {
     aws_vpc_endpoint.s3,
     aws_vpc_endpoint.interfaces
   ]
+  lifecycle {
+    ignore_changes = [
+      task_definition
+    ]
+  }
 }

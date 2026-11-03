@@ -84,13 +84,12 @@ resource "aws_cloudfront_distribution" "website" {
 
     cached_methods = ["GET", "HEAD"]
 
-    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be8bc"
+    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 
     origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3"
 
     compress = true
   }
-
   # Cache versioned static Next.js assets
   ordered_cache_behavior {
     path_pattern     = "/_next/static/*"

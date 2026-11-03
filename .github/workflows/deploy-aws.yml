@@ -1,0 +1,175 @@
+
+name: LunarOps - AWS Deploy
+
+on:
+  push:
+    branches:
+      - devsecops/setup
+    paths:
+      - "src/**"
+      - "public/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - "package.json"
+      - "package-lock.json"
+      - "next.config.mjs"
+      - "tailwind.config.ts"
+      - "tsconfig.json"
+      - ".github/workflows/deploy-aws.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lunarops-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Build and security check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Next.js build
+        run: npm run build
+
+      - name: Build Docker image for scan
+        run: |
+          docker build --platform linux/amd64 \
+            -t lunarops-frontend:verify \
+            -f Dockerfile .
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: image
+          image-ref: lunarops-frontend:verify
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  deploy:
+    name: Deploy frontend to AWS ECS
+    needs: verify
+
+    if: github.ref == 'refs/heads/devsecops/setup'
+
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPOSITORY: lunarops-frontend
+      ECS_CLUSTER: lunarops-production-cluster
+      ECS_SERVICE: lunarops-frontend-service
+      ECS_TASK_FAMILY: lunarops-production-frontend
+
+    steps:
+      # 1. Get application code
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      # 2. AWS temporary credentials via OIDC
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          allowed-account-ids: "783112293087"
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      # 3. Login to ECR on Linux runner
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      # 4. Build and publish frontend image
+      - name: Build and push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          if aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids "imageTag=$IMAGE_TAG" \
+            >/dev/null 2>&1; then
+
+            echo "Image already exists in ECR"
+
+          else
+            docker build --platform linux/amd64 \
+              -t "$IMAGE" \
+              -f Dockerfile .
+
+            docker push "$IMAGE"
+          fi
+
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      # 5. Get current ECS task definition
+      - name: Download ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "$ECS_TASK_FAMILY" \
+            --query taskDefinition \
+            --output json > task-definition.json
+
+      # 6. Set the new Docker image
+      - name: Render new task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: task-definition.json
+          container-name: frontend
+          image: ${{ steps.build-image.outputs.image }}
+
+      # 7. Update ECS service
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+          wait-max-delay-seconds: 15
+
+      # 8. Check that website API is working
+      - name: Smoke test
+        env:
+          WEBSITE_URL: ${{ vars.WEBSITE_URL }}
+        run: |
+          test -n "$WEBSITE_URL"
+
+          curl --fail --silent --show-error \
+            --retry 8 \
+            --retry-delay 10 \
+            --retry-all-errors \
+            "$WEBSITE_URL/api/compare" \
+            -o response.json
+
+          jq -e '.engine == "typescript-client"' response.json
+
+          echo "LunarOps deployment successful!"
