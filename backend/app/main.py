@@ -21,7 +21,7 @@ app = FastAPI(
 # Enable CORS for local Next.js frontend dev server and production origins
 app.add_middleware(
     CORSMiddleware,
-    allowed_origins = [
+    allow_origins = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ALLOWED_ORIGINS",
