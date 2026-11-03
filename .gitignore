@@ -75,3 +75,22 @@ __pycache__/
 venv/
 .env
 .DS_Store
+
+
+# Terraform downloaded providers
+.terraform/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Terraform variables (may contain credentials)
+*.tfvars
+*.tfvars.json
+
+# Terraform generated plans and logs
+*.tfplan
+tfplan
+crash.log
+crash.*.log
