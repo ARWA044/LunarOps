@@ -33,6 +33,8 @@ COPY --from=builder --chown=65532:65532 /app/.next/standalone ./
 # Copy Next.js static assets
 COPY --from=builder --chown=65532:65532 /app/.next/static ./.next/static
 
+USER 65532:65532
+
 EXPOSE 3000
 
 # Distroless Node.js images already use node as entrypoint
