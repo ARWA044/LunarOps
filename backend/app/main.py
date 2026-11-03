@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from .models import (
     CandidateSiteModel,
@@ -20,8 +21,15 @@ app = FastAPI(
 # Enable CORS for local Next.js frontend dev server and production origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allowed_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000"
+    ).split(",")
+    if origin.strip()
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
