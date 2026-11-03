@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
 
@@ -124,7 +124,7 @@ jobs:
           format: "table"
           severity: "CRITICAL,HIGH"
           exit-code: '1'
-          
+
   terraform-validate:
     name: Terraform Validation
     runs-on: ubuntu-latest
