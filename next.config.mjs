@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   // Three.js / WebGL packages need to be transpiled for Next.js
   transpilePackages: ["three", "@react-three/fiber", "@react-three/drei"],
