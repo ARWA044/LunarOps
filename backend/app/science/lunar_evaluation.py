@@ -68,15 +68,26 @@ def _try_load_spice() -> bool:
     if _SPICE_LOADED is not None:
         return _SPICE_LOADED
 
-    kernel_dir = os.environ.get(
-        "SPICE_KERNEL_DIR",
-        os.path.join(os.path.dirname(__file__), "..", "..", "..", "kernels"),
-    )
-    kernel_dir = os.path.abspath(kernel_dir)
+    env_dir = os.environ.get("SPICE_KERNEL_DIR")
+    if env_dir:
+        candidate_dirs = [os.path.abspath(env_dir)]
+    else:
+        candidate_dirs = [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "kernels")),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "kernels")),
+        ]
+
     required_kernels = ["de421.bsp", "pck00011.tpc", "naif0012.tls"]
 
-    missing = [k for k in required_kernels if not os.path.isfile(os.path.join(kernel_dir, k))]
-    if missing:
+    kernel_dir = None
+    for c_dir in candidate_dirs:
+        if all(os.path.isfile(os.path.join(c_dir, k)) for k in required_kernels):
+            kernel_dir = c_dir
+            break
+
+    if not kernel_dir:
+        kernel_dir = candidate_dirs[0]
+        missing = [k for k in required_kernels if not os.path.isfile(os.path.join(kernel_dir, k))]
         logger.info(
             "[LunarEval] SPICE kernels not found (%s) in '%s'. "
             "Using geometric fallback. "
