@@ -5,3 +5,8 @@ pytest>=8.3.3,<9.0.0
 httpx>=0.27.2,<1.0.0
 numpy>=1.26.0,<2.2.0
 python-dateutil>=2.9.0
+# Optional: SpiceyPy enables SPICE DE421 precision for /api/lunar-evaluation.
+# The endpoint falls back to the built-in geometric model if spiceypy is absent.
+# To install: pip install spiceypy>=6.0.0
+# Kernel download: see backend/app/science/lunar_evaluation.py header comments.
+spiceypy>=6.0.0

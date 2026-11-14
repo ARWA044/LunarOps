@@ -7,9 +7,12 @@ from .models import (
     CompareRequestModel,
     CompareResponseModel,
     DateRangeModel,
+    LunarEvaluationRequest,
+    LunarEvaluationResponse,
 )
 from .science.terrain_horizon import CANDIDATE_SITES, get_site_by_id
 from .science.ephemeris import analyze_site_visibility, generate_narrative_summary
+from .science.lunar_evaluation import evaluate_lunar_site
 
 app = FastAPI(
     title="LunarOps Science Telemetry API",
@@ -109,6 +112,70 @@ def compare_landing_sites_get(
         stepHours=step,
     )
     return compare_landing_sites(req)
+
+
+@app.post("/api/lunar-evaluation", response_model=LunarEvaluationResponse)
+def lunar_evaluation(request: LunarEvaluationRequest):
+    """
+    Single-site, single-timestamp lunar evaluation powered by SpiceyPy (NASA SPICE
+    DE421 ephemeris) with an automatic fallback to the built-in geometric model.
+
+    **Input**
+    ```json
+    {
+      "latitude":  -89.54,
+      "longitude":  0.0,
+      "timestamp": "2027-01-15T12:00:00Z"
+    }
+    ```
+
+    **Output (core metrics)**
+    - `sunlight_percentage`       — 30-day rolling solar illumination (0–100 %)
+    - `earth_los_percentage`      — 30-day rolling Earth line-of-sight (0–100 %)
+    - `mission_viability_score`   — Weighted composite (60 % power + 40 % comms)
+    - `recommendation_text`       — Engineering verdict with region classification
+
+    **SPICE kernel setup (optional, one-time, ~27 MB total)**
+    ```bash
+    mkdir -p backend/kernels && cd backend/kernels
+    curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de421.bsp
+    curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc
+    curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls
+    pip install spiceypy>=6.0.0
+    ```
+    Set `SPICE_KERNEL_DIR` env var to override the default `backend/kernels/` path.
+    If kernels are absent, the endpoint uses the built-in geometric model and
+    returns `"engine": "geometric-fallback"` in the response.
+    """
+    # Parse and normalise timestamp
+    if request.timestamp:
+        try:
+            ts_str = request.timestamp.replace("Z", "+00:00")
+            timestamp = datetime.fromisoformat(ts_str)
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid ISO 8601 timestamp '{request.timestamp}': {e}",
+            )
+    else:
+        timestamp = datetime.now(timezone.utc)
+
+    try:
+        result = evaluate_lunar_site(
+            latitude=request.latitude,
+            longitude=request.longitude,
+            timestamp=timestamp,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Lunar evaluation engine error: {exc}",
+        )
+
+    return LunarEvaluationResponse(**result)
+
 
 if __name__ == "__main__":
     import uvicorn
