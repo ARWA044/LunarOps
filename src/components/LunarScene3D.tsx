@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -8,9 +7,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import type { CandidateSite } from "@/lib/types";
-
 export type CameraMode = "system" | "southPole" | "siteA" | "siteB";
-
 interface SceneProps {
   cameraMode: CameraMode;
   selectedSiteA: CandidateSite;
@@ -32,7 +29,6 @@ const SUN_RADIUS = 3.8;
 const AU = 58;
 const MOON_ORBIT_RADIUS = 8.8;
 const SUN_POS = new THREE.Vector3(-AU, 0, 0);
-
 export function latLonToVec3(lat: number, lon: number, radius: number): THREE.Vector3 {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -50,7 +46,6 @@ function createEarthDayTexture(): THREE.CanvasTexture {
   canvas.height = 512;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
-
   // 1. Deep Ocean base gradient
   const oceanGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
   oceanGrad.addColorStop(0, "#0b2545");
@@ -58,7 +53,6 @@ function createEarthDayTexture(): THREE.CanvasTexture {
   oceanGrad.addColorStop(1, "#0b2545");
   ctx.fillStyle = oceanGrad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   // 2. Continents (Americas, Africa, Europe, Asia, Australia)
   const drawContinent = (
     pts: [number, number][],
@@ -77,7 +71,6 @@ function createEarthDayTexture(): THREE.CanvasTexture {
     ctx.strokeStyle = strokeColor;
     ctx.stroke();
   };
-
   // North America
   drawContinent([
     [120, 90], [280, 80], [310, 160], [240, 220], [180, 240], [140, 180], [100, 130]
@@ -98,12 +91,10 @@ function createEarthDayTexture(): THREE.CanvasTexture {
   drawContinent([
     [780, 320], [880, 330], [860, 410], [790, 400]
   ], "#b7791f");
-
   // Polar Ice Caps
   ctx.fillStyle = "rgba(240, 248, 255, 0.85)";
   ctx.fillRect(0, 0, canvas.width, 32);
   ctx.fillRect(0, canvas.height - 32, canvas.width, 32);
-
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -117,15 +108,12 @@ function createEarthCloudsTexture(): THREE.CanvasTexture {
   canvas.height = 512;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   for (let i = 0; i < 70; i++) {
     const x = Math.random() * canvas.width;
     const y = 60 + Math.random() * (canvas.height - 120);
     const rx = 30 + Math.random() * 80;
     const ry = 10 + Math.random() * 25;
-
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(x, y, rx, ry, (Math.random() - 0.5) * 0.4, 0, Math.PI * 2);
@@ -134,25 +122,22 @@ function createEarthCloudsTexture(): THREE.CanvasTexture {
     ctx.fill();
     ctx.restore();
   }
-
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   return texture;
 }
 
-// ─── Procedural High-Definition Lunar Surface Texture ────────────────────────
+// ─── Procedural Lunar Surface Texture (artistic approximation) ────────────────
 function createProceduralLunarTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = 1024;
   canvas.height = 512;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
-
   // 1. Base anorthositic highlands
   ctx.fillStyle = "#8a94a6";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   // 2. High-frequency micro-cratering noise
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imgData.data;
@@ -168,7 +153,6 @@ function createProceduralLunarTexture(): THREE.CanvasTexture {
     }
   }
   ctx.putImageData(imgData, 0, 0);
-
   // 3. Basaltic Lunar Maria (Dark plains)
   const drawMare = (cx: number, cy: number, rx: number, ry: number, color = "#2c3340") => {
     ctx.save();
@@ -179,14 +163,12 @@ function createProceduralLunarTexture(): THREE.CanvasTexture {
     ctx.fill();
     ctx.restore();
   };
-
   drawMare(450, 180, 85, 75, "#2d3340"); // Oceanus Procellarum
   drawMare(490, 170, 60, 48, "#252b36"); // Mare Imbrium
   drawMare(560, 200, 48, 42, "#282e3a"); // Mare Serenitatis
   drawMare(580, 240, 52, 45, "#2a303d"); // Mare Tranquillitatis
   drawMare(680, 200, 36, 30, "#202530"); // Mare Crisium
   drawMare(512, 465, 130, 45, "#2a303d"); // South Pole - Aitken Basin
-
   // 4. Detailed impact craters with bright ray systems
   const drawCraterWithRays = (x: number, y: number, r: number, numRays = 8) => {
     ctx.save();
@@ -201,20 +183,17 @@ function createProceduralLunarTexture(): THREE.CanvasTexture {
       ctx.lineTo(x + Math.cos(angle) * rayLen, y + Math.sin(angle) * rayLen);
       ctx.stroke();
     }
-
     // Bright ejecta rim
     ctx.beginPath();
     ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
     ctx.fillStyle = "rgba(235, 242, 255, 0.2)";
     ctx.filter = "blur(3px)";
     ctx.fill();
-
     // Crater Rim
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fillStyle = "#a8b5c9";
     ctx.fill();
-
     // Crater Shadow
     ctx.beginPath();
     ctx.arc(x + r * 0.2, y + r * 0.2, r * 0.72, 0, Math.PI * 2);
@@ -222,13 +201,11 @@ function createProceduralLunarTexture(): THREE.CanvasTexture {
     ctx.fill();
     ctx.restore();
   };
-
   drawCraterWithRays(470, 360, 13, 12); // Tycho
   drawCraterWithRays(460, 215, 11, 8);  // Copernicus
   drawCraterWithRays(400, 220, 7, 6);   // Kepler
   drawCraterWithRays(512, 505, 9, 8);   // Shackleton (South Pole)
   drawCraterWithRays(530, 490, 7, 5);   // Faustini
-
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -242,17 +219,14 @@ function createSunCoronaTexture(): THREE.CanvasTexture {
   canvas.height = 256;
   const ctx = canvas.getContext("2d");
   if (!ctx) return new THREE.CanvasTexture(canvas);
-
   const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
   grad.addColorStop(0, "rgba(255, 255, 255, 1)");
   grad.addColorStop(0.2, "rgba(255, 215, 0, 0.85)");
   grad.addColorStop(0.5, "rgba(245, 158, 11, 0.4)");
   grad.addColorStop(0.8, "rgba(239, 68, 68, 0.15)");
   grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 256, 256);
-
   return new THREE.CanvasTexture(canvas);
 }
 
@@ -271,7 +245,6 @@ export function LunarScene3D({
   sites,
 }: SceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-
   // Live state reference to prevent re-instantiating the WebGL context
   const liveStateRef = useRef({
     cameraMode,
@@ -286,7 +259,6 @@ export function LunarScene3D({
     onSiteClick,
     sites,
   });
-
   useEffect(() => {
     liveStateRef.current = {
       cameraMode,
@@ -314,7 +286,6 @@ export function LunarScene3D({
     onSiteClick,
     sites,
   ]);
-
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -322,13 +293,10 @@ export function LunarScene3D({
     // ── 1. Scene, Camera, Renderer ───────────────────────────────────────────
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x04070d); // Cosmic Obsidian
-
     const width = container.clientWidth || window.innerWidth;
     const height = container.clientHeight || window.innerHeight;
-
     const camera = new THREE.PerspectiveCamera(48, width / height, 0.05, 3500);
     camera.position.set(14, 9, 14);
-
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -345,17 +313,35 @@ export function LunarScene3D({
       0.22  // bloom threshold
     );
     const outputPass = new OutputPass();
-
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene);
     composer.addPass(bloomPass);
     composer.addPass(outputPass);
-
     const controls = new OrbitControls(camera, renderer.domElement);
+// Smooth movement
     controls.enableDamping = true;
     controls.dampingFactor = 0.055;
-    controls.minDistance = 0.25;
+// Allow free camera interaction
+    controls.enableRotate = true;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.rotateSpeed = 0.7;
+    controls.zoomSpeed = 1.0;
+    controls.panSpeed = 1.0;
+// Allow panning in screen coordinates
+    controls.screenSpacePanning = true;
+// Zoom toward mouse pointer
+    controls.zoomToCursor = true;
+// Prevent the camera from getting too close
+// to the Moon or going inside the Earth
+    controls.minDistance = 1.1;
     controls.maxDistance = 180;
+// Mouse controls
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN,
+    };
 
     // ── 2. Multi-Layer Starfield & Milky Way ──────────────────────────────────
     // Layer A: Deep field background stars
@@ -363,7 +349,6 @@ export function LunarScene3D({
     const deepStarCount = 6000;
     const deepPos = new Float32Array(deepStarCount * 3);
     const deepCol = new Float32Array(deepStarCount * 3);
-
     for (let i = 0; i < deepStarCount; i++) {
       const r = 500 + Math.random() * 400;
       const theta = Math.random() * Math.PI * 2;
@@ -371,7 +356,6 @@ export function LunarScene3D({
       deepPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       deepPos[i * 3 + 1] = r * Math.cos(phi);
       deepPos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
-
       // Color temperature variation (blue-white to amber)
       const temp = Math.random();
       if (temp > 0.8) {
@@ -387,7 +371,6 @@ export function LunarScene3D({
     const deepStarMat = new THREE.PointsMaterial({ size: 1.1, vertexColors: true, transparent: true, opacity: 0.85 });
     const deepStarField = new THREE.Points(deepStarGeo, deepStarMat);
     scene.add(deepStarField);
-
     // Layer B: Milky Way Galactic Belt (concentrated dense particles)
     const mwGeo = new THREE.BufferGeometry();
     const mwCount = 4000;
@@ -401,11 +384,9 @@ export function LunarScene3D({
       const x = Math.cos(angle) * dist;
       const z = Math.sin(angle) * dist;
       const y = spread + Math.sin(angle * 2) * 40;
-
       mwPos[i * 3] = x;
       mwPos[i * 3 + 1] = y;
       mwPos[i * 3 + 2] = z;
-
       mwCol[i * 3] = 0.6 + Math.random() * 0.3;
       mwCol[i * 3 + 1] = 0.7 + Math.random() * 0.3;
       mwCol[i * 3 + 2] = 0.9 + Math.random() * 0.1;
@@ -419,13 +400,11 @@ export function LunarScene3D({
     // ── 3. Photorealistic Sun with Animated Corona & Lens Flare ───────────────
     const sunGroup = new THREE.Group();
     sunGroup.position.copy(SUN_POS);
-
     const sunCoreMesh = new THREE.Mesh(
       new THREE.SphereGeometry(SUN_RADIUS, 36, 36),
       new THREE.MeshBasicMaterial({ color: 0xfffaed })
     );
     sunGroup.add(sunCoreMesh);
-
     // Pulsing corona shells
     const coronaTexture = createSunCoronaTexture();
     const coronaMesh1 = new THREE.Mesh(
@@ -433,30 +412,25 @@ export function LunarScene3D({
       new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.28 })
     );
     sunGroup.add(coronaMesh1);
-
     const coronaMesh2 = new THREE.Mesh(
       new THREE.SphereGeometry(SUN_RADIUS * 1.45, 32, 32),
       new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.12 })
     );
     sunGroup.add(coronaMesh2);
-
     // Sprite flare
     const flareMat = new THREE.SpriteMaterial({ map: coronaTexture, color: 0xffeedd, transparent: true, opacity: 0.65 });
     const flareSprite = new THREE.Sprite(flareMat);
     flareSprite.scale.set(SUN_RADIUS * 6, SUN_RADIUS * 6, 1);
     sunGroup.add(flareSprite);
-
     // Sun directional sunlight & point light
     const sunLight = new THREE.PointLight(0xfff8eb, 5.5, 2500, 0.2);
     sunGroup.add(sunLight);
     scene.add(sunGroup);
-
     const spaceAmbient = new THREE.AmbientLight(0x283244, 0.45);
     scene.add(spaceAmbient);
 
     // ── 4. Photorealistic Earth with Clouds & Atmosphere ─────────────────────
     const earthGroup = new THREE.Group();
-
     const earthDayTex = createEarthDayTexture();
     const earthMesh = new THREE.Mesh(
       new THREE.SphereGeometry(EARTH_RADIUS, 48, 48),
@@ -467,7 +441,6 @@ export function LunarScene3D({
       })
     );
     earthGroup.add(earthMesh);
-
     // Separate rotating cloud layer
     const earthCloudsTex = createEarthCloudsTexture();
     const cloudsMesh = new THREE.Mesh(
@@ -480,7 +453,6 @@ export function LunarScene3D({
       })
     );
     earthGroup.add(cloudsMesh);
-
     // Atmosphere Fresnel rim glow
     const atmosphereMesh = new THREE.Mesh(
       new THREE.SphereGeometry(EARTH_RADIUS * 1.06, 48, 48),
@@ -493,7 +465,6 @@ export function LunarScene3D({
     );
     earthGroup.add(atmosphereMesh);
     scene.add(earthGroup);
-
     // Moon Orbit Trajectory Path Ring
     const orbitPts: THREE.Vector3[] = [];
     for (let i = 0; i <= 140; i++) {
@@ -510,14 +481,12 @@ export function LunarScene3D({
     // ── 5. High-Definition 3D Moon & Holographic Blueprint Materials ───────────
     const moonGroup = new THREE.Group();
     const lunarTex = createProceduralLunarTexture();
-
     // Standard realistic rock material
     const moonNormalMat = new THREE.MeshStandardMaterial({
       map: lunarTex,
       roughness: 0.95,
       metalness: 0.02,
     });
-
     // Holographic X-Ray blueprint wireframe material
     const moonHoloMat = new THREE.MeshBasicMaterial({
       wireframe: true,
@@ -525,20 +494,17 @@ export function LunarScene3D({
       transparent: true,
       opacity: 0.22,
     });
-
     const moonNormalMesh = new THREE.Mesh(
       new THREE.SphereGeometry(MOON_RADIUS, 64, 64),
       moonNormalMat
     );
     moonGroup.add(moonNormalMesh);
-
     const moonHoloMesh = new THREE.Mesh(
       new THREE.SphereGeometry(MOON_RADIUS, 64, 64),
       moonHoloMat
     );
     moonHoloMesh.visible = false;
     moonGroup.add(moonHoloMesh);
-
     // Dark occlusion sphere inside the moon (prevents back-facing wireframe clutter in holo mode)
     const moonOcclusionMesh = new THREE.Mesh(
       new THREE.SphereGeometry(MOON_RADIUS * 0.992, 32, 32),
@@ -546,7 +512,6 @@ export function LunarScene3D({
     );
     moonOcclusionMesh.visible = false;
     moonGroup.add(moonOcclusionMesh);
-
     // Holographic cyan atmospheric rim glow in analysis mode
     const moonHoloGlow = new THREE.Mesh(
       new THREE.SphereGeometry(MOON_RADIUS * 1.045, 32, 32),
@@ -563,21 +528,18 @@ export function LunarScene3D({
     // ── High-Tech Holographic Reticles for Site A & Site B ────────────────────
     const createTargetingReticle = (colorHex: number) => {
       const g = new THREE.Group();
-
       // Outer radar ring
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(0.038, 0.042, 32),
         new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
       );
       g.add(ring);
-
       // Inner dashed reticle ring
       const innerRing = new THREE.Mesh(
         new THREE.RingGeometry(0.022, 0.025, 24),
         new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
       );
       g.add(innerRing);
-
       // 4 Crosshair tick bars
       const tickGeo = new THREE.BufferGeometry();
       const tickPts = new Float32Array([
@@ -590,29 +552,24 @@ export function LunarScene3D({
       const tickMat = new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
       const ticks = new THREE.LineSegments(tickGeo, tickMat);
       g.add(ticks);
-
       g.visible = false;
       return g;
     };
-
     const reticleA = createTargetingReticle(0xf59e0b); // Amber for Site A
     const reticleB = createTargetingReticle(0x00f0ff); // Neon Cyan for Site B
     moonGroup.add(reticleA);
     moonGroup.add(reticleB);
-
     scene.add(moonGroup);
 
     // ── 6. Interactive 3D Beacons, Altitude Stalks & LOLA Rings ──────────────
     const beaconMeshes: THREE.Mesh[] = [];
     const beaconGroup = new THREE.Group();
     moonGroup.add(beaconGroup);
-
     const rebuildBeacons = (currentSites: CandidateSite[], siteA: CandidateSite, siteB: CandidateSite) => {
       while (beaconGroup.children.length > 0) {
         beaconGroup.remove(beaconGroup.children[0]);
       }
       beaconMeshes.length = 0;
-
       currentSites.forEach((site) => {
         const isA = site.id === siteA.id;
         const isB = site.id === siteB.id;
@@ -620,14 +577,11 @@ export function LunarScene3D({
         const surfPos = latLonToVec3(site.latitude, site.longitude, MOON_RADIUS * 1.015);
         const normal = surfPos.clone().normalize();
         const stalkTop = surfPos.clone().add(normal.clone().multiplyScalar(isA || isB ? 0.035 : 0.018));
-
         const bGroup = new THREE.Group();
-
         // 1. Altitude Stalk (line connecting surface to elevated beacon)
         const stalkGeo = new THREE.BufferGeometry().setFromPoints([surfPos, stalkTop]);
         const stalkMat = new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: isA || isB ? 0.9 : 0.4 });
         bGroup.add(new THREE.Line(stalkGeo, stalkMat));
-
         // 2. Elevated Floating Holographic Beacon Core
         const marker = new THREE.Mesh(
           new THREE.SphereGeometry(isA || isB ? 0.011 : 0.006, 12, 12),
@@ -637,7 +591,6 @@ export function LunarScene3D({
         marker.userData = { site };
         bGroup.add(marker);
         beaconMeshes.push(marker);
-
         // 3. LOLA Terrain Ring on surface
         const ringQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
         const ring = new THREE.Mesh(
@@ -654,7 +607,6 @@ export function LunarScene3D({
         ring.userData = { site };
         bGroup.add(ring);
         beaconMeshes.push(ring);
-
         // 4. Secondary Outer Halo Ring for Selected Sites
         if (isA || isB) {
           const halo = new THREE.Mesh(
@@ -665,11 +617,9 @@ export function LunarScene3D({
           halo.quaternion.copy(ringQuat);
           bGroup.add(halo);
         }
-
         beaconGroup.add(bGroup);
       });
     };
-
     rebuildBeacons(liveStateRef.current.sites, liveStateRef.current.selectedSiteA, liveStateRef.current.selectedSiteB);
 
     // ── 7. Dynamic Flowing Dashed Raycast Lines (Solar & Comms) ───────────────
@@ -688,7 +638,6 @@ export function LunarScene3D({
       scene.add(line);
       return line;
     };
-
     const solarRayA = createFlowingRay(0xf59e0b); // Amber
     const solarRayB = createFlowingRay(0xf59e0b);
     const commsRayA = createFlowingRay(0x00f0ff); // Earth Comms Cyan
@@ -697,12 +646,10 @@ export function LunarScene3D({
     // ── 8. Raycaster for 3D Marker Interaction ────────────────────────────────
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-
     const handlePointerDown = (event: MouseEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(beaconMeshes, false);
       if (intersects.length > 0) {
@@ -715,13 +662,21 @@ export function LunarScene3D({
     };
     renderer.domElement.addEventListener("pointerdown", handlePointerDown);
 
-    // ── 9. Camera Flight Easing ───────────────────────────────────────────────
+    // ── 9. Camera Flight Easing ────────────────────────────────────────────
+    // Camera destination and point to look at
     let targetCamPos: THREE.Vector3 | null = null;
     let targetCamLook: THREE.Vector3 | null = null;
+    // Stop automatic movement when the user interacts
+    const stopCameraFlight = () => {
+      targetCamPos = null;
+      targetCamLook = null;
+    };
+    controls.addEventListener("start", stopCameraFlight);
+
+    // Track which camera preset is selected
     let lastCameraMode = liveStateRef.current.cameraMode;
     let lastSiteAId = liveStateRef.current.selectedSiteA.id;
     let lastSiteBId = liveStateRef.current.selectedSiteB.id;
-
     const setupCameraTarget = () => {
       const st = liveStateRef.current;
       const synodicPeriod = 29.530588853 * 24 * 3600;
@@ -732,31 +687,51 @@ export function LunarScene3D({
         Math.sin(a * 0.08) * 0.35,
         Math.sin(a) * MOON_ORBIT_RADIUS
       );
-
       if (st.cameraMode === "system") {
         targetCamPos = new THREE.Vector3(14, 9, 14);
         targetCamLook = new THREE.Vector3(0, 0, 0);
       } else if (st.cameraMode === "southPole") {
-        // Dramatic view right below the South Pole crater rims with realistic depth
-        targetCamPos = curMoonPos.clone().add(new THREE.Vector3(0.45, -MOON_RADIUS * 3.6, 1.25));
-        targetCamLook = curMoonPos.clone().add(new THREE.Vector3(0, -MOON_RADIUS * 0.95, 0));
+        targetCamPos = curMoonPos.clone().add(
+          new THREE.Vector3(0.45, -MOON_RADIUS * 3.6, 1.25)
+        );
+        targetCamLook = curMoonPos.clone().add(
+          new THREE.Vector3(0, -MOON_RADIUS * 0.95, 0)
+        );
       } else if (st.cameraMode === "siteA") {
-        const local = latLonToVec3(st.selectedSiteA.latitude, st.selectedSiteA.longitude, MOON_RADIUS * 2.2);
+        const local = latLonToVec3(
+          st.selectedSiteA.latitude,
+          st.selectedSiteA.longitude,
+          MOON_RADIUS * 4.5
+        );
         targetCamPos = curMoonPos.clone().add(local);
-        targetCamLook = curMoonPos.clone().add(latLonToVec3(st.selectedSiteA.latitude, st.selectedSiteA.longitude, MOON_RADIUS * 0.88));
+        targetCamLook = curMoonPos.clone().add(
+          latLonToVec3(
+            st.selectedSiteA.latitude,
+            st.selectedSiteA.longitude,
+            MOON_RADIUS * 0.88
+          )
+        );
       } else {
-        const local = latLonToVec3(st.selectedSiteB.latitude, st.selectedSiteB.longitude, MOON_RADIUS * 2.2);
+        const local = latLonToVec3(
+          st.selectedSiteB.latitude,
+          st.selectedSiteB.longitude,
+          MOON_RADIUS * 4.5
+        );
         targetCamPos = curMoonPos.clone().add(local);
-        targetCamLook = curMoonPos.clone().add(latLonToVec3(st.selectedSiteB.latitude, st.selectedSiteB.longitude, MOON_RADIUS * 0.88));
+        targetCamLook = curMoonPos.clone().add(
+          latLonToVec3(
+            st.selectedSiteB.latitude,
+            st.selectedSiteB.longitude,
+            MOON_RADIUS * 0.88
+          )
+        );
       }
     };
-
     setupCameraTarget();
 
     // ── 10. Animation Loop ────────────────────────────────────────────────────
     let animId: number;
     const clock = new THREE.Clock();
-
     const updateRay = (
       line: THREE.Line,
       start: THREE.Vector3,
@@ -769,10 +744,8 @@ export function LunarScene3D({
       posAttr.setXYZ(0, start.x, start.y, start.z);
       posAttr.setXYZ(1, end.x, end.y, end.z);
       posAttr.needsUpdate = true;
-
       // Recompute distance for dashes
       line.computeLineDistances();
-
       const mat = line.material as THREE.LineDashedMaterial;
       if (isVisible) {
         mat.color.setHex(clearColorHex);
@@ -790,12 +763,10 @@ export function LunarScene3D({
         mat.scale = 1;
       }
     };
-
     const animate = () => {
       animId = requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
       const st = liveStateRef.current;
-
       // Check if site selections changed
       if (st.selectedSiteA.id !== lastSiteAId || st.selectedSiteB.id !== lastSiteBId) {
         lastSiteAId = st.selectedSiteA.id;
@@ -803,21 +774,17 @@ export function LunarScene3D({
         rebuildBeacons(st.sites, st.selectedSiteA, st.selectedSiteB);
         setupCameraTarget();
       }
-
       // Check if camera mode changed
       if (st.cameraMode !== lastCameraMode) {
         lastCameraMode = st.cameraMode;
         setupCameraTarget();
       }
-
       // Rotations & Visual Pulsing
       earthMesh.rotation.y = elapsed * 0.04;
       cloudsMesh.rotation.y = elapsed * 0.052; // Slightly faster cloud drift
-
       const coronaScale = 1 + 0.035 * Math.sin(elapsed * 2.2);
       coronaMesh1.scale.setScalar(coronaScale);
       coronaMesh2.scale.setScalar(1 + 0.05 * Math.cos(elapsed * 1.8));
-
       // Compute Moon Position
       const synodicPeriod = 29.530588853 * 24 * 3600;
       const tSec = st.currentDate.getTime() / 1000;
@@ -828,14 +795,12 @@ export function LunarScene3D({
         Math.sin(moonAngle) * MOON_ORBIT_RADIUS
       );
       moonGroup.position.copy(moonPos);
-
       // World positions of sites on Moon
       const siteALocal = latLonToVec3(st.selectedSiteA.latitude, st.selectedSiteA.longitude, MOON_RADIUS);
       const siteBLocal = latLonToVec3(st.selectedSiteB.latitude, st.selectedSiteB.longitude, MOON_RADIUS);
       const siteAWorld = siteALocal.clone().add(moonPos);
       const siteBWorld = siteBLocal.clone().add(moonPos);
       const earthCenter = new THREE.Vector3(0, 0, 0);
-
       // Update Flowing Raycast Beams
       updateRay(solarRayA, SUN_POS, siteAWorld, st.isSunVisibleA, 0xf59e0b, elapsed);
       updateRay(solarRayB, SUN_POS, siteBWorld, st.isSunVisibleB, 0xf59e0b, elapsed);
@@ -850,35 +815,43 @@ export function LunarScene3D({
       moonHoloGlow.visible = isHolo;
       reticleA.visible = isHolo;
       reticleB.visible = isHolo;
-
       if (isHolo) {
         const reticleAPos = siteALocal.clone().normalize().multiplyScalar(MOON_RADIUS * 1.022);
         reticleA.position.copy(reticleAPos);
         reticleA.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), reticleAPos.clone().normalize());
         reticleA.rotateZ(elapsed * 0.5);
-
         const reticleBPos = siteBLocal.clone().normalize().multiplyScalar(MOON_RADIUS * 1.022);
         reticleB.position.copy(reticleBPos);
         reticleB.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), reticleBPos.clone().normalize());
         reticleB.rotateZ(-elapsed * 0.5);
-
         bloomPass.strength = 0.72;
         bloomPass.threshold = 0.28;
       } else {
         bloomPass.strength = 0.85;
         bloomPass.threshold = 0.28;
       }
-
-      // Camera Easing Lerp
+      // Move to the selected camera preset only until it arrives.
+      // As soon as the user drags, the camera flight stops (see stopCameraFlight).
       if (targetCamPos && targetCamLook) {
-        camera.position.lerp(targetCamPos, 0.045);
-        controls.target.lerp(targetCamLook, 0.045);
+        camera.position.lerp(targetCamPos, 0.085);
+        controls.target.lerp(targetCamLook, 0.085);
+        const positionReached =
+          camera.position.distanceToSquared(targetCamPos) < 0.0004;
+        const lookReached =
+          controls.target.distanceToSquared(targetCamLook) < 0.0004;
+        if (positionReached && lookReached) {
+          camera.position.copy(targetCamPos);
+          controls.target.copy(targetCamLook);
+          targetCamPos = null;
+          targetCamLook = null;
+        }
       }
-
+      // Apply camera rotation, zoom, pan and damping
       controls.update();
+      // Render the 3D scene
       composer.render();
-    };
-
+    }; // End of animate()
+    // Start the animation loop
     animate();
 
     // ── 11. Resize Handler ────────────────────────────────────────────────────
@@ -899,6 +872,7 @@ export function LunarScene3D({
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", handleResize);
       renderer.domElement.removeEventListener("pointerdown", handlePointerDown);
+      controls.removeEventListener("start", stopCameraFlight);
       composer.dispose();
       controls.dispose();
       renderer.dispose();
