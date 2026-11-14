@@ -7,10 +7,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install system dependencies
+
+# Install system dependencies and the patched zlib package
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    zlib1g \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Install python dependencies
 COPY backend/requirements.txt /app/backend/requirements.txt
