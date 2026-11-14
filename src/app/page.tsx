@@ -52,15 +52,12 @@ class WebGLErrorBoundary extends Component<{ children: ReactNode }, { hasError: 
 
 // Dynamic import of the pure native Three.js 3D canvas (client-only, SSR disabled)
 const LunarScene3D = dynamic(
-  () => import("@/components/LunarScene3D").then((m) => ({ default: m.LunarScene3D })),
+  () => import("@/components/LunarScene3D").then((mod) => mod.LunarScene3D || mod.default),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-space-950">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-mono text-slate-400">Loading 3D Celestial Engine…</p>
-        </div>
+      <div className="absolute inset-0 flex items-center justify-center bg-black text-cyan-400 font-mono text-sm tracking-widest">
+        [ INITIALIZING 3D CELESTIAL ENGINE... ]
       </div>
     ),
   }
@@ -180,21 +177,19 @@ export default function Home() {
       {viewMode === "3d" && (
         <div className="absolute inset-0 z-0">
           <WebGLErrorBoundary>
-            <Suspense fallback={null}>
-              <LunarScene3D
-                cameraMode={cameraMode}
-                selectedSiteA={selectedSiteA}
-                selectedSiteB={selectedSiteB}
-                currentDate={currentDate}
-                isSunVisibleA={currentStepA?.isSunVisible ?? false}
-                isSunVisibleB={currentStepB?.isSunVisible ?? false}
-                isEarthVisibleA={currentStepA?.isEarthVisible ?? false}
-                isEarthVisibleB={currentStepB?.isEarthVisible ?? false}
-                isAnalysisMode={isAnalysisMode}
-                onSiteClick={handleSiteClick}
-                sites={CANDIDATE_SITES}
-              />
-            </Suspense>
+            <LunarScene3D
+              cameraMode={cameraMode}
+              selectedSiteA={selectedSiteA}
+              selectedSiteB={selectedSiteB}
+              currentDate={currentDate}
+              isSunVisibleA={currentStepA?.isSunVisible ?? false}
+              isSunVisibleB={currentStepB?.isSunVisible ?? false}
+              isEarthVisibleA={currentStepA?.isEarthVisible ?? false}
+              isEarthVisibleB={currentStepB?.isEarthVisible ?? false}
+              isAnalysisMode={isAnalysisMode}
+              onSiteClick={handleSiteClick}
+              sites={CANDIDATE_SITES}
+            />
           </WebGLErrorBoundary>
         </div>
       )}

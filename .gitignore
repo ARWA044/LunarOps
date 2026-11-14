@@ -89,3 +89,8 @@ venv/
 tfplan
 crash.log
 crash.*.log
+
+# NASA SPICE Binary Kernels
+backend/kernels/*.bsp
+backend/kernels/*.tpc
+backend/kernels/*.tls
