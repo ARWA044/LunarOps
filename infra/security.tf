@@ -90,3 +90,54 @@ resource "aws_vpc_security_group_ingress_rule" "endpoints_from_frontend" {
   to_port     = 443
   ip_protocol = "tcp"
 }
+
+resource "aws_security_group" "backend" {
+  name        = "lunarops-backend-sg"
+  description = "Private FastAPI ECS tasks"
+  vpc_id      = aws_vpc.lunarops.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "backend_from_alb" {
+  security_group_id            = aws_security_group.backend.id
+  referenced_security_group_id = aws_security_group.alb.id
+
+  from_port   = 8000
+  to_port     = 8000
+  ip_protocol = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_to_backend" {
+  security_group_id            = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.backend.id
+
+  from_port   = 8000
+  to_port     = 8000
+  ip_protocol = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "backend_to_endpoints" {
+  security_group_id            = aws_security_group.backend.id
+  referenced_security_group_id = aws_security_group.endpoints.id
+
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "endpoints_from_backend" {
+  security_group_id            = aws_security_group.endpoints.id
+  referenced_security_group_id = aws_security_group.backend.id
+
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "backend_to_s3" {
+  security_group_id = aws_security_group.backend.id
+  prefix_list_id    = aws_vpc_endpoint.s3.prefix_list_id
+
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+}

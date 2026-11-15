@@ -18,7 +18,7 @@ import {
   Sparkles,
   BookOpen,
 } from "lucide-react";
-import { CandidateSite, ComparisonResponse, TimeStepTelemetry } from "@/lib/types";
+import { CandidateSite, ComparisonResponse, LunarEvaluationResult, TimeStepTelemetry } from "@/lib/types";
 import { CANDIDATE_SITES } from "@/lib/lola-terrain";
 import { KpiRings } from "./KpiRings";
 import { ElevationChart } from "./ElevationChart";
@@ -57,6 +57,8 @@ interface HudOverlayProps {
   comparisonData: ComparisonResponse | null;
   currentStepA: TimeStepTelemetry | null;
   currentStepB: TimeStepTelemetry | null;
+  spiceEvaluationA?: LunarEvaluationResult | null;
+  spiceEvaluationB?: LunarEvaluationResult | null;
 }
 
 export function HudOverlay({
@@ -83,6 +85,8 @@ export function HudOverlay({
   comparisonData,
   currentStepA,
   currentStepB,
+  spiceEvaluationA,
+  spiceEvaluationB,
 }: HudOverlayProps) {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(false);
@@ -258,6 +262,26 @@ export function HudOverlay({
               <span className="hidden xl:inline">Disclaimer</span>
             </button>
 
+            {viewMode === "3d" && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  soundEngine?.playClick();
+                  setLeftOpen((p) => !p);
+                }}
+                className={`rounded-full px-3 py-1 flex items-center gap-1.5 text-xs font-mono transition-all border ${
+                  leftOpen
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]"
+                    : "bg-white/[0.04] border-white/10 text-slate-300 hover:text-white"
+                }`}
+                title="Toggle Mission Sidebar & Story Guide"
+              >
+                <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Sidebar</span>
+              </motion.button>
+            )}
+
             {viewMode === "3d" && comparisonData && (
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -404,7 +428,7 @@ export function HudOverlay({
                         const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                         if (found) handleSiteSelectA(found);
                       }}
-                      className="w-full mt-2 bg-black/50 border border-white/10 rounded-xl px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-400"
+                      className="w-full mt-2 hud-select rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-100 cursor-pointer"
                     >
                       {CANDIDATE_SITES.map((site) => (
                         <option key={site.id} value={site.id} className="bg-slate-900 text-white">
@@ -431,7 +455,7 @@ export function HudOverlay({
                         const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                         if (found) handleSiteSelectB(found);
                       }}
-                      className="w-full mt-2 bg-black/50 border border-white/10 rounded-xl px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-400"
+                      className="w-full mt-2 hud-select hud-select-cyan rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-100 cursor-pointer"
                     >
                       {CANDIDATE_SITES.map((site) => (
                         <option key={site.id} value={site.id} className="bg-slate-900 text-white">
@@ -460,6 +484,40 @@ export function HudOverlay({
                         siteColor="sky"
                         currentStep={currentStepB}
                       />
+                    </div>
+                  )}
+
+                  {/* Live NASA JPL SPICE Science Evaluation Card */}
+                  {spiceEvaluationA && (
+                    <div className="bento-card rounded-2xl p-3 border border-amber-500/30 bg-black/40 space-y-2">
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-amber-400 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                          JPL SPICE Telemetry
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          {spiceEvaluationA.engine}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
+                        <div className="bg-white/[0.03] p-1.5 rounded-xl border border-white/5">
+                          <div className="text-[8px] text-slate-400 uppercase">Solar Avail</div>
+                          <div className="text-xs font-bold text-amber-400">{spiceEvaluationA.sunlight_percentage}%</div>
+                        </div>
+                        <div className="bg-white/[0.03] p-1.5 rounded-xl border border-white/5">
+                          <div className="text-[8px] text-slate-400 uppercase">Earth LoS</div>
+                          <div className="text-xs font-bold text-sky-400">{spiceEvaluationA.earth_los_percentage}%</div>
+                        </div>
+                        <div className="bg-white/[0.03] p-1.5 rounded-xl border border-white/5">
+                          <div className="text-[8px] text-slate-400 uppercase">Viability</div>
+                          <div className="text-xs font-bold text-emerald-400">{spiceEvaluationA.mission_viability_score}</div>
+                        </div>
+                      </div>
+
+                      <p className="text-[9px] font-mono text-slate-300 leading-tight border-t border-white/5 pt-1.5 line-clamp-3">
+                        {spiceEvaluationA.recommendation_text}
+                      </p>
                     </div>
                   )}
 

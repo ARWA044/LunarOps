@@ -190,7 +190,7 @@ export function StoryGuide({
                   const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                   if (found) handleSelectSiteB(found);
                 }}
-                className="w-full bg-space-950/80 border border-sky-500/30 rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500"
+                className="w-full hud-select hud-select-cyan rounded-xl px-3 py-2 text-xs font-mono text-slate-100 cursor-pointer"
               >
                 {CANDIDATE_SITES.map((site) => (
                   <option key={site.id} value={site.id}>

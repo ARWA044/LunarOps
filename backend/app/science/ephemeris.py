@@ -77,7 +77,12 @@ def analyze_site_visibility(
     start_dt: datetime,
     end_dt: datetime,
     step_hours: int = 1,
+    use_spice: bool = False,
 ) -> SiteAnalysisResultModel:
+    # Import lazily to keep the geometric analysis helpers usable on their own.
+    if use_spice:
+        from .lunar_evaluation import _spice_sub_earth_point, _spice_sub_solar_point
+
     telemetry: List[TimeStepTelemetryModel] = []
     start_ts = start_dt.timestamp()
     end_ts = end_dt.timestamp()
@@ -97,11 +102,13 @@ def analyze_site_visibility(
     epoch_idx = 0
 
     while cur_ts <= end_ts:
-        dt = datetime.fromtimestamp(cur_ts)
+        dt = datetime.fromtimestamp(cur_ts, tz=start_dt.tzinfo)
         jd = to_julian_date(dt)
 
         # Sun topocentric position
-        sub_sun_lat, sub_sun_lon = get_sub_solar_point(jd)
+        sub_sun_lat, sub_sun_lon = (
+            _spice_sub_solar_point(dt) if use_spice else get_sub_solar_point(jd)
+        )
         sun_az, sun_el = calculate_local_horizon_coords(
             site.latitude, site.longitude, site.elevationKm, sub_sun_lat, sub_sun_lon
         )
@@ -109,7 +116,9 @@ def analyze_site_visibility(
         is_sun_visible = sun_el > sun_obs
 
         # Earth topocentric position
-        sub_earth_lat, sub_earth_lon = get_sub_earth_point(jd)
+        sub_earth_lat, sub_earth_lon = (
+            _spice_sub_earth_point(dt) if use_spice else get_sub_earth_point(jd)
+        )
         earth_az, earth_el = calculate_local_horizon_coords(
             site.latitude, site.longitude, site.elevationKm, sub_earth_lat, sub_earth_lon
         )

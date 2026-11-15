@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CANDIDATE_SITES } from "@/lib/lola-terrain";
 import { analyzeSiteVisibility } from "@/lib/astronomical";
 import { generateNarrativeSummary } from "@/lib/narrative";
-import { CandidateSite, ComparisonResponse, TimeStepTelemetry } from "@/lib/types";
+import { evaluateLunarSite, fetchComparison } from "@/lib/api";
+import { CandidateSite, ComparisonResponse, LunarEvaluationResult, TimeStepTelemetry } from "@/lib/types";
 
 import { HudOverlay } from "@/components/HudOverlay";
 import { TimePlayer } from "@/components/TimePlayer";
@@ -78,6 +79,8 @@ export default function Home() {
 
   // ── Comparison data ────────────────────────────────────────────────────────
   const [comparisonData, setComparisonData] = useState<ComparisonResponse | null>(null);
+  const [spiceEvaluationA, setSpiceEvaluationA] = useState<LunarEvaluationResult | null>(null);
+  const [spiceEvaluationB, setSpiceEvaluationB] = useState<LunarEvaluationResult | null>(null);
 
   // ── View & camera mode ─────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("3d");
@@ -90,33 +93,39 @@ export default function Home() {
   const [playSpeed, setPlaySpeed] = useState(10);
   const playInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Fetch NASA JPL SPICE Single-Site Evaluation ─────────────────────────────
+  const fetchSpiceEvaluation = useCallback(async (siteA: CandidateSite, siteB: CandidateSite, dateStr: string) => {
+    try {
+      const ts = `${dateStr}T12:00:00Z`;
+      const [resA, resB] = await Promise.all([
+        evaluateLunarSite(siteA.latitude, siteA.longitude, ts),
+        evaluateLunarSite(siteB.latitude, siteB.longitude, ts),
+      ]);
+      setSpiceEvaluationA(resA);
+      setSpiceEvaluationB(resB);
+    } catch (err) {
+      console.warn("[LunarOps] SPICE evaluation fetch error:", err);
+    }
+  }, []);
+
   // ── Compute analysis ───────────────────────────────────────────────────────
-  const runAnalysis = useCallback(() => {
+  const runAnalysis = useCallback(async () => {
     setIsLoading(true);
     setCurrentIndex(0);
     setIsPlaying(false);
-    setTimeout(() => {
-      try {
-        const start = new Date(`${startDate}T00:00:00Z`);
-        const end = new Date(`${endDate}T23:59:59Z`);
-        const siteAResult = analyzeSiteVisibility(selectedSiteA, start, end, stepHours);
-        const siteBResult = analyzeSiteVisibility(selectedSiteB, start, end, stepHours);
-        const narrative = generateNarrativeSummary(siteAResult, siteBResult, startDate, endDate);
-        setComparisonData({
-          siteA: siteAResult,
-          siteB: siteBResult,
-          dateRange: { start: start.toISOString(), end: end.toISOString(), stepHours },
-          generatedAt: new Date().toISOString(),
-          summaryNarrative: narrative,
-          engine: "typescript-client",
-        });
-      } catch (err) {
-        console.error("Analysis calculation error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 150);
-  }, [selectedSiteA, selectedSiteB, startDate, endDate, stepHours]);
+    try {
+      // 1. Fetch side-by-side time-series data from FastAPI /api/compare
+      const comp = await fetchComparison(selectedSiteA, selectedSiteB, startDate, endDate, stepHours);
+      setComparisonData(comp);
+
+      // 2. Fetch NASA JPL SPICE evaluations from FastAPI POST /api/lunar-evaluation
+      await fetchSpiceEvaluation(selectedSiteA, selectedSiteB, startDate);
+    } catch (err) {
+      console.error("Analysis calculation error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedSiteA, selectedSiteB, startDate, endDate, stepHours, fetchSpiceEvaluation]);
 
   // Initial run on mount
   useEffect(() => {
@@ -124,21 +133,44 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Re-fetch SPICE evaluation when candidate site selection changes
+  useEffect(() => {
+    fetchSpiceEvaluation(selectedSiteA, selectedSiteB, startDate);
+  }, [selectedSiteA, selectedSiteB, startDate, fetchSpiceEvaluation]);
+
   // ── Playback ticker ───────────────────────────────────────────────────────
   useEffect(() => {
     if (playInterval.current) clearInterval(playInterval.current);
     if (!isPlaying || !comparisonData?.siteA?.telemetry?.length) return;
     const total = comparisonData.siteA.telemetry.length;
+
+    // Calculate tick delay and step based on speed multiplier
+    let tickDelay = 120;
+    let stepIncrement = 1;
+    if (playSpeed === 0.5) {
+      tickDelay = 240;
+      stepIncrement = 1;
+    } else if (playSpeed === 1) {
+      tickDelay = 150;
+      stepIncrement = 1;
+    } else if (playSpeed === 2) {
+      tickDelay = 80;
+      stepIncrement = 1;
+    } else {
+      tickDelay = 100;
+      stepIncrement = Math.max(1, Math.floor(playSpeed / 10));
+    }
+
     playInterval.current = setInterval(() => {
       setCurrentIndex((prev) => {
-        const next = prev + Math.max(1, Math.floor(playSpeed / 10));
+        const next = prev + stepIncrement;
         if (next >= total) {
           setIsPlaying(false);
           return total - 1;
         }
         return next;
       });
-    }, 120);
+    }, tickDelay);
     return () => {
       if (playInterval.current) clearInterval(playInterval.current);
     };
@@ -340,6 +372,8 @@ export default function Home() {
         comparisonData={comparisonData}
         currentStepA={currentStepA}
         currentStepB={currentStepB}
+        spiceEvaluationA={spiceEvaluationA}
+        spiceEvaluationB={spiceEvaluationB}
       />
 
       {/* ── BOTTOM INTERACTIVE TIME PLAYER (in 3D mode) ─────────────────── */}

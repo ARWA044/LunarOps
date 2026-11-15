@@ -73,7 +73,7 @@ def test_compare_endpoint_post():
     assert "earthElevation" in t0
     assert "isSunVisible" in t0
 
-    assert data["engine"] == "python-fastapi"
+    assert data["engine"] in {"spiceypy-de421", "geometric-fallback"}
 
 def test_compare_endpoint_get():
     response = client.get("/api/compare?siteA=site-c&siteB=site-d&start=2027-01-01T00:00:00Z&end=2027-01-03T00:00:00Z&step=6")
