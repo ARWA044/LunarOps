@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 class CandidateSiteModel(BaseModel):
@@ -72,6 +72,7 @@ class CompareResponseModel(BaseModel):
     generatedAt: str
     summaryNarrative: NarrativeSummaryModel
     engine: str = "python-fastapi"
+    nasa_datasets: List[Dict[str, str]] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -155,3 +156,4 @@ class LunarEvaluationResponse(BaseModel):
     evaluation_window_days: int
     engine: str
     computed_at: str
+    nasa_datasets: List[Dict[str, str]] = Field(default_factory=list)

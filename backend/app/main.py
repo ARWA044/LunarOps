@@ -14,6 +14,47 @@ from .science.terrain_horizon import CANDIDATE_SITES, get_site_by_id
 from .science.ephemeris import analyze_site_visibility, generate_narrative_summary
 from .science.lunar_evaluation import _try_load_spice, evaluate_lunar_site
 
+
+def nasa_dataset_metadata(spice_available: bool) -> list[dict[str, str]]:
+    return [
+        {
+            "id": "naif-spice-de421",
+            "name": "NASA JPL NAIF SPICE kernels",
+            "products": "DE421, PCK00011, NAIF0012",
+            "status": "used" if spice_available else "unavailable_geometric_fallback",
+            "method": "Numerical ephemeris and lunar body-fixed geometry for Sun/Earth positions.",
+            "limitations": "SPICE is active only when SpiceyPy and all three local kernels load successfully.",
+            "url": "https://naif.jpl.nasa.gov/naif/data.html",
+        },
+        {
+            "id": "lro-lola",
+            "name": "NASA LRO LOLA",
+            "products": "Lunar Orbiter Laser Altimeter terrain context",
+            "status": "synthetic_approximation",
+            "method": "Prototype horizon masks and site elevations are parameterized approximations informed by lunar polar terrain context.",
+            "limitations": "No LOLA DEM, slope, roughness, or PSR raster is ingested by this application; values are not direct LOLA measurements.",
+            "url": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+        },
+        {
+            "id": "lro-diviner",
+            "name": "NASA LRO Diviner Lunar Radiometer",
+            "products": "Diviner gridded data records",
+            "status": "not_integrated",
+            "method": "No Diviner observations or thermal calculations currently feed the scores.",
+            "limitations": "Surface temperature and thermal stability are not modeled by this evaluation engine.",
+            "url": "https://pds.nasa.gov/ds-view/pds/viewProfile.jsp?dsid=LRO-L-DLRE-5-GDR-V1.0",
+        },
+        {
+            "id": "artemis-candidate-regions",
+            "name": "NASA Artemis III candidate landing regions",
+            "products": "Official candidate-region references; prototype site roster",
+            "status": "reference_only",
+            "method": "App-configured coordinates are used as example comparison sites, not imported official region polygons or constraints.",
+            "limitations": "The five app sites are not the complete/current NASA candidate-region list; do not present them as official coordinates.",
+            "url": "https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/",
+        },
+    ]
+
 app = FastAPI(
     title="LunarOps Science Telemetry API",
     description="NASA Space Apps Challenge 2026: CLPS Lunar Landing-Site Sunlight Availability & DTE Visibility Telemetry Engine.",
@@ -113,6 +154,7 @@ def compare_landing_sites(request: CompareRequestModel):
         generatedAt=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         summaryNarrative=narrative,
         engine="spiceypy-de421" if use_spice else "geometric-fallback",
+        nasa_datasets=nasa_dataset_metadata(use_spice),
     )
 
 @app.get("/api/compare", response_model=CompareResponseModel)
@@ -193,7 +235,10 @@ def lunar_evaluation(request: LunarEvaluationRequest):
             detail=f"Lunar evaluation engine error: {exc}",
         )
 
-    return LunarEvaluationResponse(**result)
+    return LunarEvaluationResponse(
+        **result,
+        nasa_datasets=nasa_dataset_metadata(result["engine"] == "spiceypy-de421"),
+    )
 
 
 if __name__ == "__main__":

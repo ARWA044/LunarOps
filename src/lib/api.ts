@@ -62,6 +62,7 @@ export async function evaluateLunarSite(
       evaluation_window_days: 30,
       engine: "offline-geometric-fallback",
       computed_at: new Date().toISOString(),
+      nasa_datasets: [],
     };
   }
 
@@ -105,6 +106,7 @@ export async function fetchComparison(
       generatedAt: new Date().toISOString(),
       summaryNarrative: generateNarrativeSummary(siteAResult, siteBResult, startDateStr, endDateStr),
       engine: "typescript-client",
+      nasa_datasets: [],
     };
   }
 

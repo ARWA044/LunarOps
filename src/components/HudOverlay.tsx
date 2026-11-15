@@ -29,6 +29,7 @@ import { ExportReport } from "./ExportReport";
 import { SoundWidget } from "./SoundWidget";
 import { StoryGuide } from "./StoryGuide";
 import { soundEngine } from "@/lib/sound-engine";
+import { NasaDataSources } from "./NasaDataSources";
 import type { CameraMode } from "./LunarScene3D";
 
 type ViewMode = "3d" | "analytics";
@@ -333,21 +334,17 @@ export function HudOverlay({
       {viewMode === "3d" && (
         <>
           <div
-            className={`absolute left-3 top-18 bottom-24 z-20 w-[min(21rem,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-left flex flex-col gap-2.5 ${
+            className={`absolute left-3 top-18 bottom-24 z-20 w-[min(21rem,calc(100vw-1.5rem))] min-h-0 overflow-visible pointer-events-auto hud-slide-left flex flex-col gap-2.5 ${
               leftOpen ? "translate-x-0 opacity-100" : "-translate-x-88 opacity-0 pointer-events-none"
             }`}
           >
-            {/* Collapse toggle */}
-            <button
-              onClick={() => {
-                soundEngine?.playClick();
-                setLeftOpen(false);
-              }}
-              className="absolute -right-8 top-2 bento-card w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors z-30"
-              title="Collapse Dock"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex shrink-0 justify-end">
+              <button type="button" onClick={() => { soundEngine?.playClick(); setLeftOpen(false); }}
+                className="pointer-events-auto z-50 flex min-h-8 items-center gap-1.5 rounded-xl border border-white/10 bg-slate-950/95 px-2.5 text-[10px] font-mono text-slate-300 shadow-glass transition-colors hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                title="Collapse mission menu" aria-label="Collapse mission menu">
+                <ChevronLeft className="h-3.5 w-3.5" /> Hide menu
+              </button>
+            </div>
 
             {/* Dock Tab Selector: Story Mode vs Manual Telemetry */}
             <div className="flex items-center bento-card rounded-full p-1 gap-1 shrink-0">
@@ -629,6 +626,7 @@ export function HudOverlay({
           </button>
 
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pr-1 pb-3 scrollbar-thin">
+            <NasaDataSources datasets={comparisonData.nasa_datasets ?? []} />
             <ElevationChart siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
             <VisibilityTimeline siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
             <HorizonRadar siteA={comparisonData.siteA} siteB={comparisonData.siteB} />

@@ -67,6 +67,17 @@ export interface ComparisonResponse {
   generatedAt: string;
   summaryNarrative: NarrativeSummary;
   engine: "typescript-client" | "python-fastapi" | "spiceypy-de421" | "geometric-fallback";
+  nasa_datasets?: NasaDatasetMetadata[];
+}
+
+export interface NasaDatasetMetadata {
+  id: string;
+  name: string;
+  products: string;
+  status: string;
+  method: string;
+  limitations: string;
+  url: string;
 }
 
 export interface LunarEvaluationResult {
@@ -82,5 +93,6 @@ export interface LunarEvaluationResult {
   evaluation_window_days: number;
   engine: "spiceypy-de421" | "geometric-fallback" | string;
   computed_at: string;
+  nasa_datasets: NasaDatasetMetadata[];
 }
 
