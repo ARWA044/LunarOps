@@ -333,7 +333,7 @@ export function HudOverlay({
       {viewMode === "3d" && (
         <>
           <div
-            className={`absolute left-3 top-18 bottom-24 z-20 w-84 hud-slide-left flex flex-col gap-2.5 ${
+            className={`absolute left-3 top-18 bottom-24 z-20 w-[min(21rem,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-left flex flex-col gap-2.5 ${
               leftOpen ? "translate-x-0 opacity-100" : "-translate-x-88 opacity-0 pointer-events-none"
             }`}
           >
@@ -381,7 +381,7 @@ export function HudOverlay({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-1 pb-3 scrollbar-thin">
               {leftTab === "story" ? (
                 <StoryGuide
                   selectedSiteA={selectedSiteA}
@@ -403,6 +403,15 @@ export function HudOverlay({
                 />
               ) : (
                 <>
+                  <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2.5 shadow-glass backdrop-blur-xl">
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-sky-300">Manual Mode</p>
+                      <p className="text-[9px] text-slate-500">Mission controls</p>
+                    </div>
+                    <button type="button" onClick={() => setLeftTab("story")} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2.5 py-2 text-[10px] font-mono font-semibold text-amber-200 transition-colors hover:border-amber-300/60 hover:bg-amber-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+                      <ChevronLeft className="h-3.5 w-3.5" /> Back to Menu
+                    </button>
+                  </div>
                   {/* Site A Card */}
                   <div className="bento-card rounded-2xl p-3.5 border-l-2 border-l-amber-400">
                     <div className="flex items-center justify-between mb-1">
@@ -604,7 +613,7 @@ export function HudOverlay({
       {/* ── RIGHT EXPANDABLE ANALYTICS DRAWER (in 3D mode) ────────────────── */}
       {viewMode === "3d" && comparisonData && (
         <div
-          className={`absolute right-3 top-18 bottom-24 z-20 w-[560px] max-w-[92vw] hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
+          className={`absolute right-3 top-18 bottom-24 z-20 w-[min(560px,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
             rightOpen ? "translate-x-0 opacity-100" : "translate-x-[580px] opacity-0 pointer-events-none"
           }`}
         >
@@ -619,7 +628,7 @@ export function HudOverlay({
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pr-1 pb-3 scrollbar-thin">
             <ElevationChart siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
             <VisibilityTimeline siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
             <HorizonRadar siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
