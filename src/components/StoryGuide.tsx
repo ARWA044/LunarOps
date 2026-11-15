@@ -149,26 +149,29 @@ export function StoryGuide({
             </div>
 
             {/* Site A Target */}
-            <div className="space-y-1">
-              <label className="text-[9px] font-mono text-amber-300 uppercase tracking-widest block">
-                Primary Target (Site A)
-              </label>
-              <div className="grid grid-cols-1 gap-1.5 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-mono text-amber-300 uppercase tracking-widest block">
+                  Primary Target
+                </label>
+                <span className="text-[9px] font-mono text-slate-500">SITE A · {CANDIDATE_SITES.length} SITES</span>
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto pr-1 scrollbar-thin">
                 {CANDIDATE_SITES.map((site) => {
                   const isSelected = site.id === selectedSiteA.id;
                   return (
                     <button
                       key={site.id}
                       onClick={() => handleSelectSiteA(site)}
-                      className={`text-left p-2 rounded-xl transition-all border ${
+                      className={`group relative text-left p-2.5 rounded-xl transition-all duration-200 border overflow-hidden ${
                         isSelected
-                          ? "bg-amber-500/20 border-amber-500 text-white shadow-solar-glow"
-                          : "bg-space-950/60 border-white/5 text-slate-300 hover:border-amber-500/40"
+                          ? "bg-gradient-to-r from-amber-500/[0.16] to-amber-500/[0.04] border-amber-400/60 text-white shadow-[0_0_18px_rgba(245,158,11,0.10)]"
+                          : "bg-white/[0.025] border-white/[0.07] text-slate-300 hover:bg-white/[0.05] hover:border-amber-400/30"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs truncate">{site.name}</span>
-                        <span className="text-[9px] font-mono text-amber-300">{site.badge}</span>
+                        <span className="font-display font-semibold text-xs truncate">{site.name}</span>
+                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md ${isSelected ? "bg-amber-400/15 text-amber-200" : "bg-white/[0.05] text-slate-500"}`}>{site.badge}</span>
                       </div>
                       <div className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
                         {site.coordinatesDisplay} • {site.category}
@@ -180,24 +183,44 @@ export function StoryGuide({
             </div>
 
             {/* Site B Benchmark */}
-            <div className="space-y-1 pt-1 border-t border-white/5">
-              <label className="text-[9px] font-mono text-sky-300 uppercase tracking-widest block">
-                Benchmark Reference (Site B)
-              </label>
-              <select
-                value={selectedSiteB.id}
-                onChange={(e) => {
-                  const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
-                  if (found) handleSelectSiteB(found);
-                }}
-                className="w-full hud-select hud-select-cyan rounded-xl px-3 py-2 text-xs font-mono text-slate-100 cursor-pointer"
-              >
-                {CANDIDATE_SITES.map((site) => (
-                  <option key={site.id} value={site.id}>
-                    {site.badge}: {site.name} ({site.category})
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-2 pt-3 border-t border-white/[0.07]">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-mono text-cyan-300 uppercase tracking-widest block">
+                  Benchmark Reference
+                </label>
+                <span className="text-[9px] font-mono text-slate-500">SITE B</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {CANDIDATE_SITES.map((site) => {
+                  const isSelected = site.id === selectedSiteB.id;
+                  return (
+                    <button
+                      key={site.id}
+                      type="button"
+                      onClick={() => handleSelectSiteB(site)}
+                      aria-pressed={isSelected}
+                      className={`group flex min-w-0 items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition-all duration-200 ${
+                        isSelected
+                          ? "border-cyan-300/55 bg-gradient-to-r from-cyan-400/[0.16] to-cyan-400/[0.04] shadow-[0_0_18px_rgba(34,211,238,0.10)]"
+                          : "border-white/[0.07] bg-white/[0.025] hover:border-cyan-300/30 hover:bg-white/[0.05]"
+                      }`}
+                    >
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-mono text-[9px] font-bold ${isSelected ? "border-cyan-300/40 bg-cyan-300/15 text-cyan-200" : "border-white/[0.08] bg-black/20 text-slate-500 group-hover:text-slate-300"}`}>
+                        {site.badge.replace("Site ", "")}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className={`block truncate font-display text-[11px] font-semibold ${isSelected ? "text-white" : "text-slate-300"}`}>
+                          {site.name}
+                        </span>
+                        <span className="mt-0.5 block truncate font-mono text-[9px] text-slate-500">
+                          {site.category} · {site.coordinatesDisplay}
+                        </span>
+                      </span>
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${isSelected ? "bg-cyan-300 shadow-[0_0_9px_rgba(34,211,238,.8)]" : "bg-slate-700"}`} />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <button
