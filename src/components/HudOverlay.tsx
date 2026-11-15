@@ -144,7 +144,7 @@ export function HudOverlay({
           initial={{ y: -24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 140, damping: 22 }}
-          className="pointer-events-auto flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 rounded-full bg-slate-950/60 backdrop-blur-3xl border border-white/10 px-3.5 py-1.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.85),inset_0_0_0_1px_rgba(255,255,255,0.05)]"
+          className="pointer-events-auto flex h-14 min-h-14 max-w-[calc(100vw-1.5rem)] flex-nowrap items-center justify-between gap-2.5 overflow-x-auto rounded-full border border-white/10 bg-slate-950/90 px-3.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.85),inset_0_0_0_1px_rgba(255,255,255,0.05)] backdrop-blur-3xl sm:gap-3"
         >
           {/* Brand & Mission Badge */}
           <div className="flex items-center gap-2 pr-2.5 border-r border-white/10">
@@ -207,7 +207,7 @@ export function HudOverlay({
 
           {/* Camera Modes (in 3D mode) */}
           {viewMode === "3d" && (
-            <div className="hidden lg:flex items-center bg-black/30 rounded-full p-0.5 border border-white/[0.06]">
+            <div className="hidden 2xl:flex items-center bg-black/30 rounded-full p-0.5 border border-white/[0.06]">
               {cameraModes.map((cm) => (
                 <button
                   key={cm.key}
@@ -307,7 +307,7 @@ export function HudOverlay({
 
       {/* ── EXPANDABLE SCIENTIFIC DISCLAIMER MODAL / BANNER ───────────────── */}
       {showFullDisclaimer && (
-        <div className="absolute top-18 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-xl bento-card rounded-2xl p-4 border border-amber-500/40 shadow-[0_16px_48px_rgba(0,0,0,0.85)] animate-fadeIn">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-xl bento-card rounded-2xl p-4 border border-amber-500/40 shadow-[0_16px_48px_rgba(0,0,0,0.85)] animate-fadeIn">
           <div className="flex items-start justify-between gap-3 text-xs font-mono">
             <div className="flex items-start gap-2.5">
               <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
@@ -334,7 +334,7 @@ export function HudOverlay({
       {viewMode === "3d" && (
         <>
           <div
-            className={`absolute left-3 top-18 bottom-24 z-20 w-[min(21rem,calc(100vw-1.5rem))] min-h-0 overflow-visible pointer-events-auto hud-slide-left flex flex-col gap-2.5 ${
+            className={`absolute left-3 top-20 bottom-24 max-h-[calc(100dvh-11rem)] z-20 w-[min(21rem,calc(100vw-1.5rem))] min-h-0 overflow-visible pointer-events-auto hud-slide-left flex flex-col gap-2.5 ${
               leftOpen ? "translate-x-0 opacity-100" : "-translate-x-88 opacity-0 pointer-events-none"
             }`}
           >
@@ -598,7 +598,7 @@ export function HudOverlay({
                 soundEngine?.playClick();
                 setLeftOpen(true);
               }}
-              className="absolute left-3 top-18 z-20 bento-card w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors shadow-glass"
+              className="absolute left-3 top-20 z-50 pointer-events-auto bento-card w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors shadow-glass"
               title="Open Mission Controls"
             >
               <Menu className="w-4 h-4" />
@@ -610,7 +610,7 @@ export function HudOverlay({
       {/* ── RIGHT EXPANDABLE ANALYTICS DRAWER (in 3D mode) ────────────────── */}
       {viewMode === "3d" && comparisonData && (
         <div
-          className={`absolute right-3 top-18 bottom-24 z-20 w-[min(560px,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
+          className={`absolute right-3 top-20 bottom-24 max-h-[calc(100dvh-11rem)] z-20 w-[min(560px,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
             rightOpen ? "translate-x-0 opacity-100" : "translate-x-[580px] opacity-0 pointer-events-none"
           }`}
         >
