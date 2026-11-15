@@ -90,7 +90,7 @@ export function Controls({
             <select
               value={stepHours}
               onChange={(e) => onStepHoursChange(Number(e.target.value))}
-              className="bg-black/60 border border-white/10 rounded-2xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-emerald-400 transition-all shadow-inner cursor-pointer backdrop-blur-md"
+              className="hud-select rounded-2xl px-3.5 py-2 text-xs font-mono text-white cursor-pointer shadow-inner backdrop-blur-md"
             >
               <option value={1} className="bg-slate-900 text-white">1 Hour (High Fidelity)</option>
               <option value={2} className="bg-slate-900 text-white">2 Hours (Fast)</option>

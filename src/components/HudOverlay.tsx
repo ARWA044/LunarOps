@@ -18,7 +18,7 @@ import {
   Sparkles,
   BookOpen,
 } from "lucide-react";
-import { CandidateSite, ComparisonResponse, TimeStepTelemetry } from "@/lib/types";
+import { CandidateSite, ComparisonResponse, LunarEvaluationResult, TimeStepTelemetry } from "@/lib/types";
 import { CANDIDATE_SITES } from "@/lib/lola-terrain";
 import { KpiRings } from "./KpiRings";
 import { ElevationChart } from "./ElevationChart";
@@ -57,6 +57,8 @@ interface HudOverlayProps {
   comparisonData: ComparisonResponse | null;
   currentStepA: TimeStepTelemetry | null;
   currentStepB: TimeStepTelemetry | null;
+  spiceEvaluationA?: LunarEvaluationResult | null;
+  spiceEvaluationB?: LunarEvaluationResult | null;
 }
 
 export function HudOverlay({
@@ -83,6 +85,8 @@ export function HudOverlay({
   comparisonData,
   currentStepA,
   currentStepB,
+  spiceEvaluationA,
+  spiceEvaluationB,
 }: HudOverlayProps) {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(false);
@@ -258,6 +262,26 @@ export function HudOverlay({
               <span className="hidden xl:inline">Disclaimer</span>
             </button>
 
+            {viewMode === "3d" && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  soundEngine?.playClick();
+                  setLeftOpen((p) => !p);
+                }}
+                className={`rounded-full px-3 py-1 flex items-center gap-1.5 text-xs font-mono transition-all border ${
+                  leftOpen
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]"
+                    : "bg-white/[0.04] border-white/10 text-slate-300 hover:text-white"
+                }`}
+                title="Toggle Mission Sidebar & Story Guide"
+              >
+                <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Sidebar</span>
+              </motion.button>
+            )}
+
             {viewMode === "3d" && comparisonData && (
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -309,7 +333,7 @@ export function HudOverlay({
       {viewMode === "3d" && (
         <>
           <div
-            className={`absolute left-3 top-18 bottom-24 z-20 w-84 hud-slide-left flex flex-col gap-2.5 ${
+            className={`absolute left-3 top-18 bottom-24 z-20 w-[min(21rem,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-left flex flex-col gap-2.5 ${
               leftOpen ? "translate-x-0 opacity-100" : "-translate-x-88 opacity-0 pointer-events-none"
             }`}
           >
@@ -357,7 +381,7 @@ export function HudOverlay({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-1 pb-3 scrollbar-thin">
               {leftTab === "story" ? (
                 <StoryGuide
                   selectedSiteA={selectedSiteA}
@@ -379,6 +403,15 @@ export function HudOverlay({
                 />
               ) : (
                 <>
+                  <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2.5 shadow-glass backdrop-blur-xl">
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-sky-300">Manual Mode</p>
+                      <p className="text-[9px] text-slate-500">Mission controls</p>
+                    </div>
+                    <button type="button" onClick={() => setLeftTab("story")} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2.5 py-2 text-[10px] font-mono font-semibold text-amber-200 transition-colors hover:border-amber-300/60 hover:bg-amber-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+                      <ChevronLeft className="h-3.5 w-3.5" /> Back to Menu
+                    </button>
+                  </div>
                   {/* Site A Card */}
                   <div className="bento-card rounded-2xl p-3.5 border-l-2 border-l-amber-400">
                     <div className="flex items-center justify-between mb-1">
@@ -404,7 +437,7 @@ export function HudOverlay({
                         const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                         if (found) handleSiteSelectA(found);
                       }}
-                      className="w-full mt-2 bg-black/50 border border-white/10 rounded-xl px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-amber-400"
+                      className="w-full mt-2 hud-select rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-100 cursor-pointer"
                     >
                       {CANDIDATE_SITES.map((site) => (
                         <option key={site.id} value={site.id} className="bg-slate-900 text-white">
@@ -431,7 +464,7 @@ export function HudOverlay({
                         const found = CANDIDATE_SITES.find((s) => s.id === e.target.value);
                         if (found) handleSiteSelectB(found);
                       }}
-                      className="w-full mt-2 bg-black/50 border border-white/10 rounded-xl px-2.5 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-400"
+                      className="w-full mt-2 hud-select hud-select-cyan rounded-xl px-2.5 py-1.5 text-xs font-mono text-slate-100 cursor-pointer"
                     >
                       {CANDIDATE_SITES.map((site) => (
                         <option key={site.id} value={site.id} className="bg-slate-900 text-white">
@@ -460,6 +493,40 @@ export function HudOverlay({
                         siteColor="sky"
                         currentStep={currentStepB}
                       />
+                    </div>
+                  )}
+
+                  {/* Live NASA JPL SPICE Science Evaluation Card */}
+                  {spiceEvaluationA && (
+                    <div className="bento-card rounded-2xl p-3 border border-amber-500/30 bg-black/40 space-y-2">
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-amber-400 font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                          JPL SPICE Telemetry
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          {spiceEvaluationA.engine}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
+                        <div className="bg-white/[0.03] p-1.5 rounded-xl border border-white/5">
+                          <div className="text-[8px] text-slate-400 uppercase">Solar Avail</div>
+                          <div className="text-xs font-bold text-amber-400">{spiceEvaluationA.sunlight_percentage}%</div>
+                        </div>
+                        <div className="bg-white/[0.03] p-1.5 rounded-xl border border-white/5">
+                          <div className="text-[8px] text-slate-400 uppercase">Earth LoS</div>
+                          <div className="text-xs font-bold text-sky-400">{spiceEvaluationA.earth_los_percentage}%</div>
+                        </div>
+                        <div className="bg-white/[0.03] p-1.5 rounded-xl border border-white/5">
+                          <div className="text-[8px] text-slate-400 uppercase">Viability</div>
+                          <div className="text-xs font-bold text-emerald-400">{spiceEvaluationA.mission_viability_score}</div>
+                        </div>
+                      </div>
+
+                      <p className="text-[9px] font-mono text-slate-300 leading-tight border-t border-white/5 pt-1.5 line-clamp-3">
+                        {spiceEvaluationA.recommendation_text}
+                      </p>
                     </div>
                   )}
 
@@ -546,7 +613,7 @@ export function HudOverlay({
       {/* ── RIGHT EXPANDABLE ANALYTICS DRAWER (in 3D mode) ────────────────── */}
       {viewMode === "3d" && comparisonData && (
         <div
-          className={`absolute right-3 top-18 bottom-24 z-20 w-[560px] max-w-[92vw] hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
+          className={`absolute right-3 top-18 bottom-24 z-20 w-[min(560px,calc(100vw-1.5rem))] min-h-0 overflow-hidden hud-slide-right flex flex-col gap-3 bento-card rounded-3xl p-4.5 border border-white/[0.08] shadow-[0_16px_48px_0_rgba(0,0,0,0.9)] ${
             rightOpen ? "translate-x-0 opacity-100" : "translate-x-[580px] opacity-0 pointer-events-none"
           }`}
         >
@@ -561,7 +628,7 @@ export function HudOverlay({
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pr-1 pb-3 scrollbar-thin">
             <ElevationChart siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
             <VisibilityTimeline siteA={comparisonData.siteA} siteB={comparisonData.siteB} />
             <HorizonRadar siteA={comparisonData.siteA} siteB={comparisonData.siteB} />

@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-import os
 
 from .models import (
     CandidateSiteModel,
@@ -13,7 +12,7 @@ from .models import (
 )
 from .science.terrain_horizon import CANDIDATE_SITES, get_site_by_id
 from .science.ephemeris import analyze_site_visibility, generate_narrative_summary
-from .science.lunar_evaluation import evaluate_lunar_site
+from .science.lunar_evaluation import _try_load_spice, evaluate_lunar_site
 
 app = FastAPI(
     title="LunarOps Science Telemetry API",
@@ -21,20 +20,23 @@ app = FastAPI(
     version="2.6.0",
 )
 
-# Enable CORS for local Next.js frontend dev server and production origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins = [
+import os
+
+allowed_origins = [
     origin.strip()
     for origin in os.getenv(
         "CORS_ALLOWED_ORIGINS",
         "http://localhost:3000"
     ).split(",")
     if origin.strip()
-    ],
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 
 @app.get("/")
@@ -73,6 +75,12 @@ def compare_landing_sites(request: CompareRequestModel):
         end_str = request.endDate.replace("Z", "+00:00")
         start_dt = datetime.fromisoformat(start_str)
         end_dt = datetime.fromisoformat(end_str)
+        if start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=timezone.utc)
+        if end_dt.tzinfo is None:
+            end_dt = end_dt.replace(tzinfo=timezone.utc)
+        start_dt = start_dt.astimezone(timezone.utc)
+        end_dt = end_dt.astimezone(timezone.utc)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid ISO 8601 UTC date: {e}")
 
@@ -81,8 +89,11 @@ def compare_landing_sites(request: CompareRequestModel):
 
     step_hours = max(1, request.stepHours)
 
-    site_a_result = analyze_site_visibility(site_a, start_dt, end_dt, step_hours)
-    site_b_result = analyze_site_visibility(site_b, start_dt, end_dt, step_hours)
+    # Initialize the JPL engine once per request, then use its DE421 sub-body
+    # positions for every comparison telemetry sample when kernels are available.
+    use_spice = _try_load_spice()
+    site_a_result = analyze_site_visibility(site_a, start_dt, end_dt, step_hours, use_spice)
+    site_b_result = analyze_site_visibility(site_b, start_dt, end_dt, step_hours, use_spice)
 
     narrative = generate_narrative_summary(
         site_a_result,
@@ -101,7 +112,7 @@ def compare_landing_sites(request: CompareRequestModel):
         ),
         generatedAt=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         summaryNarrative=narrative,
-        engine="python-fastapi",
+        engine="spiceypy-de421" if use_spice else "geometric-fallback",
     )
 
 @app.get("/api/compare", response_model=CompareResponseModel)
@@ -146,7 +157,7 @@ def lunar_evaluation(request: LunarEvaluationRequest):
     **SPICE kernel setup (optional, one-time, ~27 MB total)**
     ```bash
     mkdir -p backend/kernels && cd backend/kernels
-    curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de421.bsp
+    curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp
     curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc
     curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls
     pip install spiceypy>=6.0.0

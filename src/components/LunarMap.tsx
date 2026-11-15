@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CandidateSite } from "@/lib/types";
-import { Eye, Globe, MapPin, ZoomIn } from "lucide-react";
+import { Check, Globe, MapPin } from "lucide-react";
 import { soundEngine } from "@/lib/sound-engine";
 
 interface LunarMapProps {
@@ -22,6 +22,13 @@ export function LunarMap({
 }: LunarMapProps) {
   const [mapMode, setMapMode] = useState<"south-pole" | "global">("south-pole");
   const [hoveredSite, setHoveredSite] = useState<CandidateSite | null>(null);
+  const [activeSlot, setActiveSlot] = useState<"A" | "B">("A");
+
+  const assignSite = (site: CandidateSite) => {
+    soundEngine?.playBeaconSelect();
+    if (activeSlot === "A") onSelectSiteA(site);
+    else onSelectSiteB(site);
+  };
 
   // Projection math for South Pole (Stereographic projection centered on 90°S)
   // Distance from center = (90 - abs(lat)) * scale
@@ -50,13 +57,13 @@ export function LunarMap({
   };
 
   return (
-    <div className="bento-card rounded-3xl p-5 sm:p-6 border border-white/[0.06] shadow-bento relative flex flex-col justify-between">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 mb-3.5 border-b border-white/[0.06] gap-3">
+    <div className="bento-card rounded-3xl p-5 sm:p-6 border border-white/[0.06] shadow-bento relative flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-white/[0.06] gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#00f0ff]" />
             <span className="text-[10px] font-mono tracking-widest-xl uppercase text-cyan-400/90 font-semibold">
-              SURFACE_TOPOGRAPHY // LROC_BASEMAP
+              SURFACE TOPOGRAPHY <span className="text-slate-600">/</span> LROC BASEMAP
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -68,41 +75,52 @@ export function LunarMap({
         </div>
 
         {/* Projection Mode Switcher */}
-        <div className="flex items-center bg-black/60 rounded-full p-1 border border-white/10 text-xs font-mono shrink-0">
+        <div className="flex items-center bg-black/35 rounded-xl p-1 border border-white/[0.08] text-[10px] font-mono shrink-0 shadow-inner">
           <button
+            type="button"
+            aria-pressed={mapMode === "south-pole"}
             onClick={() => {
               soundEngine?.playClick();
               setMapMode("south-pole");
             }}
-            className={`px-3 py-1.5 rounded-full transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 ${
               mapMode === "south-pole"
-                ? "bg-amber-500 text-space-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]"
+                ? "bg-amber-400 text-space-950 font-bold shadow-[0_3px_14px_rgba(245,158,11,0.24)]"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            South Pole
+            <MapPin className="h-3 w-3" /> South Pole
           </button>
           <button
+            type="button"
+            aria-pressed={mapMode === "global"}
             onClick={() => {
               soundEngine?.playClick();
               setMapMode("global");
             }}
-            className={`px-3 py-1.5 rounded-full transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 ${
               mapMode === "global"
-                ? "bg-cyan-400 text-space-950 font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]"
+                ? "bg-cyan-300 text-space-950 font-bold shadow-[0_3px_14px_rgba(0,240,255,0.22)]"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            Global Globe
+            <Globe className="h-3 w-3" /> Global
           </button>
         </div>
       </div>
 
       {/* Map Canvas Frame */}
-      <div className="relative flex flex-col items-center justify-center bg-space-950/70 rounded-xl p-3 border border-space-800 overflow-hidden">
+      <div className="relative flex flex-col items-center justify-center rounded-2xl p-3 sm:p-4 border border-white/[0.07] overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,rgba(28,42,61,0.28),rgba(4,7,13,0.82)_72%)]">
+        <div className="absolute inset-0 pointer-events-none opacity-30 bg-telemetry-grid [background-size:28px_28px]" />
+        <div className="relative z-10 mb-1 flex w-full max-w-[380px] items-center justify-between px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500">
+          <span>{mapMode === "south-pole" ? "Polar stereographic" : "Near-side projection"}</span>
+          <span>IAU · 2027</span>
+        </div>
         <svg
           viewBox="0 0 380 380"
-          className="w-full max-w-[380px] h-auto select-none"
+          className="relative z-10 w-full max-w-[380px] h-auto select-none"
+          role="group"
+          aria-label={`${mapMode === "south-pole" ? "South polar" : "Global lunar"} map with interactive candidate landing sites`}
         >
           <defs>
             {/* Lunar surface gradients */}
@@ -256,16 +274,24 @@ export function LunarMap({
             return (
               <g
                 key={site.id}
-                className="cursor-pointer transition-transform"
-                onClick={() => {
-                  soundEngine?.playBeaconSelect();
-                  if (!isA && !isB) onSelectSiteA(site);
-                  else if (isA) onSelectSiteB(site);
-                  else onSelectSiteA(site);
+                role="button"
+                tabIndex={0}
+                aria-label={`${site.name}, ${isA ? "Site A" : isB ? "Site B" : "unassigned"}. Assign to Site ${activeSlot}.`}
+                className="cursor-pointer outline-none"
+                onClick={() => assignSite(site)}
+                onKeyDown={(event: React.KeyboardEvent<SVGGElement>) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    assignSite(site);
+                  }
                 }}
                 onMouseEnter={() => setHoveredSite(site)}
                 onMouseLeave={() => setHoveredSite(null)}
+                onFocus={() => setHoveredSite(site)}
+                onBlur={() => setHoveredSite(null)}
               >
+                <title>{`${site.name} · ${site.coordinatesDisplay} · ${site.category}`}</title>
+                <circle cx={coords.x} cy={coords.y} r="13" fill="transparent" />
                 {/* Ping animation for active sites */}
                 {isA && (
                   <circle
@@ -294,44 +320,64 @@ export function LunarMap({
                 <circle
                   cx={coords.x}
                   cy={coords.y}
-                  r={isA || isB ? 6 : 4}
+                  r={isA || isB ? 7 : 4.5}
                   fill={isA ? "#f59e0b" : isB ? "#38bdf8" : "#94a3b8"}
                   stroke="#070b14"
                   strokeWidth="2"
                   filter={isA ? "url(#amberGlow)" : isB ? "url(#skyGlow)" : undefined}
                 />
 
-                {/* Label Tag */}
-                <g transform={`translate(${coords.x + 8}, ${coords.y - 8})`}>
-                  <rect
-                    x="-2"
-                    y="-10"
-                    width={site.name.length * 5.6 + 18}
-                    height="16"
-                    rx="3"
-                    fill={isA ? "rgba(245, 158, 11, 0.9)" : isB ? "rgba(56, 189, 248, 0.9)" : "rgba(15, 23, 42, 0.85)"}
-                    stroke={isA ? "#f59e0b" : isB ? "#38bdf8" : "#334155"}
-                    strokeWidth="0.8"
-                  />
-                  <text
-                    x="2"
-                    y="2"
-                    fill={isA || isB ? "#070b14" : "#f1f5f9"}
-                    fontSize="8"
-                    fontFamily="monospace"
-                    fontWeight="bold"
-                  >
-                    {isA ? "A: " : isB ? "B: " : ""}
-                    {site.name.split(" ")[0]}
-                  </text>
-                </g>
               </g>
             );
           })}
         </svg>
 
+        <div className="relative z-10 mt-3 w-full max-w-[420px] border-t border-white/[0.07] pt-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500">Assign next selection to</span>
+            <span className="rounded-full border border-white/[0.08] bg-black/20 px-2 py-1 font-mono text-[9px] text-slate-400">
+              {hoveredSite ? hoveredSite.coordinatesDisplay : "CHOOSE A LOCATION"}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" aria-pressed={activeSlot === "A"} onClick={() => setActiveSlot("A")}
+              className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition-all ${activeSlot === "A" ? "border-amber-400/45 bg-amber-400/[0.1] shadow-[0_0_18px_rgba(245,158,11,0.08)]" : "border-white/[0.07] bg-black/15 hover:border-amber-400/25"}`}>
+              <span className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-amber-300"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />Target · A</span>
+              <span className="block truncate font-display text-[11px] font-semibold text-white">{selectedSiteA.name}</span>
+            </button>
+            <button type="button" aria-pressed={activeSlot === "B"} onClick={() => setActiveSlot("B")}
+              className={`min-w-0 rounded-xl border px-2.5 py-2 text-left transition-all ${activeSlot === "B" ? "border-cyan-300/45 bg-cyan-300/[0.1] shadow-[0_0_18px_rgba(34,211,238,0.08)]" : "border-white/[0.07] bg-black/15 hover:border-cyan-300/25"}`}>
+              <span className="mb-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-wider text-cyan-300"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />Reference · B</span>
+              <span className="block truncate font-display text-[11px] font-semibold text-white">{selectedSiteB.name}</span>
+            </button>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500">Candidate sites</span>
+            <span className={`font-mono text-[9px] uppercase tracking-wider ${activeSlot === "A" ? "text-amber-300" : "text-cyan-300"}`}>Selecting for {activeSlot}</span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            {sites.map((site) => {
+              const isA = selectedSiteA.id === site.id;
+              const isB = selectedSiteB.id === site.id;
+              const isCurrent = activeSlot === "A" ? isA : isB;
+              return (
+                <button key={site.id} type="button" title={`Assign ${site.name} to Site ${activeSlot}`} onClick={() => assignSite(site)}
+                  className={`flex min-w-0 items-center gap-2 rounded-lg border px-2 py-2 text-left transition-all ${isCurrent ? activeSlot === "A" ? "border-amber-400/50 bg-amber-400/[0.09]" : "border-cyan-300/50 bg-cyan-300/[0.09]" : "border-white/[0.06] bg-black/10 hover:border-white/20 hover:bg-white/[0.03]"}`}>
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${isA ? "bg-amber-400" : isB ? "bg-cyan-300" : "bg-slate-600"}`} />
+                  <span className="min-w-0 flex-1 truncate font-display text-[10px] font-medium text-slate-200">{site.name}</span>
+                  {isCurrent && <Check className={`h-3 w-3 shrink-0 ${activeSlot === "A" ? "text-amber-300" : "text-cyan-300"}`} />}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/[0.06] pt-2 text-[9px] font-mono text-slate-500">
+            <span>{hoveredSite ? <><strong className="font-semibold text-slate-300">{hoveredSite.name}</strong> · {hoveredSite.category}</> : "Select a marker or site name to assign it"}</span>
+            <span className="shrink-0">IAU LUNAR DATUM</span>
+          </div>
+        </div>
+
         {/* Hover / Info Banner Under Map */}
-        <div className="w-full mt-2 pt-2 border-t border-space-800 text-xs font-mono flex items-center justify-between text-slate-400">
+        <div className="hidden">
           <div>
             {hoveredSite ? (
               <span className="text-amber-300">

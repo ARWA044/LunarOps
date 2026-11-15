@@ -18,7 +18,7 @@ Installation
 SPICE Kernel Download (one-time, ~27 MB total):
   mkdir backend/kernels
   cd backend/kernels
-  curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de421.bsp
+  curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp
   curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc
   curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls
 
@@ -92,7 +92,7 @@ def _try_load_spice() -> bool:
             "[LunarEval] SPICE kernels not found (%s) in '%s'. "
             "Using geometric fallback. "
             "To enable SPICE, download kernels with: "
-            "curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de421.bsp "
+            "curl -O https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/a_old_versions/de421.bsp "
             "(+ pck00011.tpc + naif0012.tls) into the kernels/ directory.",
             missing,
             kernel_dir,
